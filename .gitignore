@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.semgrep/
+.ruff_cache/
+# 収集した証跡と実行結果は絶対にコミットしない
+nhi-evidence-*/
+nhi-assessment-*/
+nhi-db.json
+findings.json
+report.html

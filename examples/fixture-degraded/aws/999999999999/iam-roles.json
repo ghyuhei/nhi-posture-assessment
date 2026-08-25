@@ -1,0 +1,4 @@
+{"Roles":[{"RoleName":"unknown-usage-role","Path":"/","Arn":"arn:aws:iam::999999999999:role/unknown-usage-role",
+ "RoleLastUsed":{"LastUsedDate":"2024-01-01T00:00:00+00:00"},"AttachedPolicies":[],
+ "AssumeRolePolicyDocument":{"Version":"2012-10-17","Statement":[{"Effect":"Allow",
+  "Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}}]}

@@ -1,0 +1,3 @@
+{"value":[{"id":"ds1","name":"to-sentinel","properties":{"logs":[
+ {"category":"SignInLogs","enabled":true},
+ {"category":"ServicePrincipalSignInLogs","enabled":true}]}}]}

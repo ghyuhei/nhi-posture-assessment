@@ -1,0 +1,2 @@
+{"Policies":[{"Id":"p-deny-keys","Name":"deny-static-creds",
+  "Content":"{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Deny\",\"Action\":[\"iam:CreateAccessKey\",\"iam:CreateUser\"],\"Resource\":\"*\"}]}"}]}

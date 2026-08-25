@@ -1,0 +1,995 @@
+{
+  "packVersion": "1.0.0",
+  "packName": "nhi-core",
+  "description": "NHI (Non-Human Identity) posture rules for AWS and Azure, mapped to OWASP Non-Human Identities Top 10 (2025).",
+  "baseline": "nhi-native-capabilities-aws-azure.html rev.2 (2026-08)",
+  "thresholds": {
+    "accessKeyMaxAgeDays": 90,
+    "credentialMaxLifetimeDays": 180,
+    "identityUnusedDays": 180,
+    "sharedIdentityFanout": 3,
+    "ficNearLimit": 16,
+    "minOwnershipRatio": 0.8
+  },
+  "rules": [
+    {
+      "id": "NHI-AWS-001",
+      "title": "IAM ユーザーが有効な長期アクセスキーを保持している",
+      "severity": "high",
+      "owasp": [
+        "NHI7",
+        "NHI4"
+      ],
+      "docRef": "F-02",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.iam_user"
+          },
+          {
+            "field": "credentials[].status",
+            "op": "eq",
+            "value": "Active"
+          }
+        ]
+      },
+      "message": "IAM ユーザー {name} が有効な長期アクセスキーを保持している。",
+      "expected": "ワークロードは IAM ロール、CI/CD は OIDC フェデレーションを使い、IAM ユーザーのアクセスキーは存在しない。",
+      "remediation": "利用元をロール/OIDC へ移行し、キーを無効化してから削除する。再発防止に SCP で iam:CreateAccessKey を Deny する。",
+      "validation": "aws iam list-access-keys --user-name <name> が Active なキーを返さないこと。"
+    },
+    {
+      "id": "NHI-AWS-002",
+      "title": "アクセスキーが許容年齢を超過している",
+      "severity": "high",
+      "owasp": [
+        "NHI7"
+      ],
+      "docRef": "F-02",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.iam_user"
+          },
+          {
+            "forEach": "credentials",
+            "where": {
+              "all": [
+                {
+                  "field": "status",
+                  "op": "eq",
+                  "value": "Active"
+                },
+                {
+                  "field": "ageDays",
+                  "op": "gt",
+                  "value": "@accessKeyMaxAgeDays"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "message": "IAM ユーザー {name} のアクセスキーが {maxCredentialAgeDays} 日経過している。",
+      "expected": "IAM アクセスキーには有効期限の概念が無いため、そもそも保持しない。",
+      "remediation": "ロール/OIDC へ移行して削除する。移行が完了するまでの暫定策としてのみローテーションを行う。",
+      "validation": "認証情報レポートの access_key_1_last_rotated が閾値内、または当該ユーザーが存在しないこと。"
+    },
+    {
+      "id": "NHI-AWS-003",
+      "title": "アクセスキーが長期間未使用のまま有効になっている",
+      "severity": "medium",
+      "owasp": [
+        "NHI1"
+      ],
+      "docRef": "F-01",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.iam_user"
+          },
+          {
+            "forEach": "credentials",
+            "where": {
+              "all": [
+                {
+                  "field": "status",
+                  "op": "eq",
+                  "value": "Active"
+                },
+                {
+                  "field": "lastUsedDays",
+                  "op": "gt",
+                  "value": "@identityUnusedDays"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "message": "IAM ユーザー {name} の有効なアクセスキーが長期間未使用。",
+      "expected": "未使用の資格情報は無効化・削除されている。",
+      "remediation": "所有者に確認のうえ無効化し、一定期間後に削除する(凍結→苦情が無ければ削除)。",
+      "validation": "認証情報レポートで当該キーが Inactive または不存在であること。",
+      "caveat": "既定の追跡期間は 180 日。四半期バッチ・年次ジョブ・災対切替でしか動かない NHI がある環境では identityUnusedDays を 365 に上げること。窓が短いと「未使用」と誤判定して稼働中の処理を壊す。"
+    },
+    {
+      "id": "NHI-AWS-004",
+      "title": "管理者相当の権限を持つ IAM ユーザーが長期キーを保持している",
+      "severity": "critical",
+      "owasp": [
+        "NHI5",
+        "NHI7"
+      ],
+      "docRef": "F-02",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.iam_user"
+          },
+          {
+            "field": "permissions.adminLike",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "forEach": "credentials",
+            "where": {
+              "field": "status",
+              "op": "eq",
+              "value": "Active"
+            }
+          }
+        ]
+      },
+      "message": "IAM ユーザー {name} が管理者相当の権限と有効な長期キーを同時に持つ。",
+      "expected": "管理者相当の権限は人間の一時セッションにのみ紐づく。",
+      "remediation": "最優先で無効化する。恒久対応として権限を実使用実績から再生成し、アクセスをロール経由に移す。",
+      "validation": "当該ユーザーに AdministratorAccess 相当が付与されておらず、Active キーが存在しないこと。"
+    },
+    {
+      "id": "NHI-AWS-005",
+      "title": "OIDC 信頼ポリシーの sub がワイルドカードを許している",
+      "severity": "critical",
+      "owasp": [
+        "NHI6",
+        "NHI8"
+      ],
+      "docRef": "F-09",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.iam_role"
+          },
+          {
+            "field": "trust.federated",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "field": "trust.wildcardSubject",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "field": "trust.unconditionalFederation",
+            "op": "ne",
+            "value": true
+          }
+        ]
+      },
+      "message": "ロール {name} の信頼ポリシーが sub のワイルドカードを許容している。",
+      "expected": "sub は完全一致で固定し、可能なら provider 固有クレーム(GitHub の repository_id 等の不変値)で縛る。",
+      "remediation": "信頼ポリシーの StringLike を StringEquals に変更し、リポジトリ名ではなくリポジトリ ID を使う。",
+      "validation": "aws iam get-role の AssumeRolePolicyDocument に sub のワイルドカードが存在しないこと。"
+    },
+    {
+      "id": "NHI-AWS-005B",
+      "title": "フェデレーション信頼に条件が一切設定されていない",
+      "severity": "critical",
+      "owasp": [
+        "NHI6",
+        "NHI3"
+      ],
+      "docRef": "F-09",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.iam_role"
+          },
+          {
+            "field": "trust.unconditionalFederation",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      },
+      "message": "ロール {name} のフェデレーション信頼に Condition が無く、当該 IdP がトークンを発行できる全ワークロードが引き受けられる。",
+      "expected": "aud と sub を最低限固定し、可能なら provider 固有クレームの不変値で縛る。",
+      "remediation": "信頼ポリシーに StringEquals による aud / sub 条件を追加する。",
+      "validation": "信頼ポリシーの各 Allow ステートメントに Condition が存在すること。"
+    },
+    {
+      "id": "NHI-AWS-006",
+      "title": "外部アカウントを ExternalId 無しで信頼している",
+      "severity": "high",
+      "owasp": [
+        "NHI3"
+      ],
+      "docRef": "CAP-THIRDPARTY",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.iam_role"
+          },
+          {
+            "field": "trust.externalPrincipal",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "field": "trust.hasExternalId",
+            "op": "eq",
+            "value": false
+          },
+          {
+            "field": "trust.orgFenced",
+            "op": "ne",
+            "value": true
+          }
+        ]
+      },
+      "message": "ロール {name} が組織外プリンシパルを sts:ExternalId 条件なしで信頼している。",
+      "expected": "サードパーティ向けロールは sts:ExternalId を必須にし、混乱した代理human問題を防ぐ。",
+      "remediation": "信頼ポリシーに sts:ExternalId 条件を追加し、値をサードパーティと共有せずテナント固有にする。",
+      "validation": "信頼ポリシーの Condition に sts:ExternalId が存在すること。",
+      "caveat": "同一 AWS Organizations 内のアカウントは第三者ではないため除外している。組織を列挙できなかった場合は除外できず、確度が low に落ちる。"
+    },
+    {
+      "id": "NHI-AWS-007",
+      "title": "IAM ロールが長期間未使用",
+      "severity": "medium",
+      "owasp": [
+        "NHI1"
+      ],
+      "docRef": "F-01",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.iam_role"
+          },
+          {
+            "field": "lastUsedDays",
+            "op": "gt",
+            "value": "@identityUnusedDays"
+          },
+          {
+            "field": "serviceLinked",
+            "op": "ne",
+            "value": true
+          }
+        ]
+      },
+      "message": "ロール {name} が {lastUsedDays} 日間未使用。",
+      "expected": "未使用ロールは削除されている。判定は業務周期(四半期/年次バッチ)を踏まえた追跡期間で行う。",
+      "remediation": "所有者を特定し、凍結(信頼ポリシーを空にする)→ 苦情が無ければ削除。",
+      "validation": "aws iam get-role の RoleLastUsed が閾値内、または当該ロールが不存在であること。",
+      "caveat": "既定の追跡期間は 180 日。四半期バッチ・年次ジョブ・災対切替でしか動かない NHI がある環境では identityUnusedDays を 365 に上げること。窓が短いと「未使用」と誤判定して稼働中の処理を壊す。"
+    },
+    {
+      "id": "NHI-AWS-008",
+      "title": "同一ロールを多数のワークロードが共有している",
+      "severity": "medium",
+      "owasp": [
+        "NHI9"
+      ],
+      "docRef": "F-03",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.iam_role"
+          },
+          {
+            "field": "attachedTo",
+            "op": "count_gte",
+            "value": "@sharedIdentityFanout"
+          }
+        ]
+      },
+      "message": "ロール {name} を複数のワークロードが共有している(影響範囲が拡大する)。",
+      "expected": "NHI はワークロード単位に分離し、侵害時の影響範囲を限定する。",
+      "remediation": "ワークロードごとにロールを分割する。ネイティブに検出機構が無いため、IaC の静的検査で再発防止する。",
+      "validation": "1 ロールにつきアタッチ先が 1 ワークロードであること。"
+    },
+    {
+      "id": "NHI-AWS-009",
+      "title": "EC2 インスタンスが IMDSv1 を許容している",
+      "severity": "critical",
+      "owasp": [
+        "NHI4",
+        "NHI2"
+      ],
+      "docRef": "F-04",
+      "target": "resources",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.ec2_instance"
+          },
+          {
+            "field": "imdsHttpTokens",
+            "op": "ne",
+            "value": "required"
+          },
+          {
+            "field": "hasInstanceRole",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      },
+      "message": "インスタンス {name} が IMDSv1 を許容し、かつ IAM ロールがアタッチされている。SSRF 一発で一時認証情報を奪取されうる。",
+      "expected": "全インスタンスで HttpTokens=required(IMDSv2 必須)。",
+      "remediation": "aws ec2 modify-instance-metadata-options --http-tokens required --http-endpoint enabled を適用し、アカウント既定も全リージョンで設定する。",
+      "validation": "MetadataNoTokenRejected メトリクスが 0 に収束し、HttpTokens=optional のインスタンスが存在しないこと。"
+    },
+    {
+      "id": "NHI-AWS-009B",
+      "title": "EC2 インスタンスが IMDSv1 を許容している(ロール未アタッチ)",
+      "severity": "medium",
+      "owasp": [
+        "NHI4"
+      ],
+      "docRef": "F-04",
+      "target": "resources",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.ec2_instance"
+          },
+          {
+            "field": "imdsHttpTokens",
+            "op": "ne",
+            "value": "required"
+          },
+          {
+            "field": "hasInstanceRole",
+            "op": "ne",
+            "value": true
+          }
+        ]
+      },
+      "message": "インスタンス {name} が IMDSv1 を許容している。現時点ではロール未アタッチのため資格情報の露出は無いが、ロール付与時に即座に Critical 化する。",
+      "expected": "全インスタンスで HttpTokens=required。",
+      "remediation": "modify-instance-metadata-options で required にする。ロール付与前に必ず閉じる。",
+      "validation": "HttpTokens=optional のインスタンスが存在しないこと。"
+    },
+    {
+      "id": "NHI-AWS-010",
+      "title": "アカウント既定の IMDSv2 強制が未設定",
+      "severity": "high",
+      "owasp": [
+        "NHI4"
+      ],
+      "docRef": "F-04",
+      "target": "scopes",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.account_region"
+          },
+          {
+            "field": "settings.imdsDefaultHttpTokens",
+            "op": "ne",
+            "value": "required"
+          }
+        ]
+      },
+      "message": "アカウント {id} のリージョン {region} で IMDSv2 のアカウント既定が未設定。",
+      "expected": "利用する全リージョンでアカウント既定を required にする(既存インスタンスには遡及しない点に注意)。",
+      "remediation": "aws ec2 modify-instance-metadata-defaults --http-tokens required をリージョンごとに実行し、SCP で ec2:MetadataHttpTokens を強制する。",
+      "validation": "aws ec2 get-instance-metadata-defaults が required を返すこと。"
+    },
+    {
+      "id": "NHI-AWS-011",
+      "title": "静的資格情報の作成を禁止する予防的ガードレールが無い",
+      "severity": "high",
+      "owasp": [
+        "NHI7"
+      ],
+      "docRef": "F-02",
+      "target": "scopes",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.account"
+          },
+          {
+            "field": "settings.scpDeniesCreateAccessKey",
+            "op": "ne",
+            "value": true
+          }
+        ]
+      },
+      "message": "アカウント {id} に iam:CreateAccessKey を Deny する SCP が適用されていない。",
+      "expected": "組織 SCP で IAM ユーザーとアクセスキーの新規作成を禁止する(break-glass ロールのみ除外)。",
+      "remediation": "SCP を作成し OU へ適用する。既存キーには遡及しないため、棚卸しと並行して実施する。",
+      "validation": "非除外プリンシパルで aws iam create-access-key が AccessDenied になること。"
+    },
+    {
+      "id": "NHI-AWS-012",
+      "title": "unused access アナライザーが有効化されていない",
+      "severity": "medium",
+      "owasp": [
+        "NHI5",
+        "NHI1"
+      ],
+      "docRef": "CAP-RIGHTSIZE",
+      "target": "scopes",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.account"
+          },
+          {
+            "field": "settings.unusedAccessAnalyzer",
+            "op": "ne",
+            "value": true
+          }
+        ]
+      },
+      "message": "アカウント {id} で IAM Access Analyzer の unused access 分析が有効化されていない。",
+      "expected": "組織レベルで有効化し、追跡期間を業務周期に合わせる(1〜365日で設定可)。",
+      "remediation": "委任管理者を設定し組織アナライザーを作成する。四半期・年次バッチがあるなら追跡期間を 365 日にする。",
+      "validation": "aws accessanalyzer list-analyzers --type ORGANIZATION_UNUSED_ACCESS が結果を返すこと。"
+    },
+    {
+      "id": "NHI-AWS-014",
+      "title": "同一 IAM ユーザーが人間のコンソール利用と自動化用キーを兼ねている",
+      "severity": "high",
+      "owasp": [
+        "NHI10",
+        "NHI9"
+      ],
+      "docRef": "F-01",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "aws.iam_user"
+          },
+          {
+            "field": "consoleLastUsedDays",
+            "op": "exists"
+          },
+          {
+            "forEach": "credentials",
+            "where": {
+              "all": [
+                {
+                  "field": "type",
+                  "op": "eq",
+                  "value": "access_key"
+                },
+                {
+                  "field": "status",
+                  "op": "eq",
+                  "value": "Active"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "message": "IAM ユーザー {name} はコンソールログイン実績と有効なアクセスキーの両方を持ち、人間の操作と自動処理が同一 ID に混在している。",
+      "expected": "人間は IAM Identity Center 等の一時セッション、自動処理はロール。両者が同一 ID を共有しない。",
+      "remediation": "自動処理をロールへ移し、当該ユーザーからアクセスキーを削除する。人間のアクセスはフェデレーションに移行する。",
+      "validation": "コンソール実績のあるプリンシパルに有効なアクセスキーが存在しないこと。",
+      "caveat": "監査証跡上、この ID の操作は人間か自動処理かを区別できない。インシデント時の説明責任が成立しない状態である。"
+    },
+    {
+      "id": "NHI-AWS-013",
+      "title": "漏洩キーの隔離ポリシーが適用されている(進行中インシデント)",
+      "severity": "critical",
+      "owasp": [
+        "NHI2"
+      ],
+      "docRef": "F-10",
+      "target": "identities",
+      "where": {
+        "field": "permissions.policies[]",
+        "op": "regex",
+        "value": "AWSCompromisedKeyQuarantine"
+      },
+      "message": "{name} に AWSCompromisedKeyQuarantine 系ポリシーが適用されている。AWS が資格情報の露出を検知した状態。",
+      "expected": "隔離ポリシーが適用された NHI は存在しない。",
+      "remediation": "隔離はキーを無効化しない点に注意。直ちにキーを無効化し、CloudTrail で悪用の有無を確認し、AWS のサポートケースの指示に従う。",
+      "validation": "隔離ポリシーがデタッチされ、当該キーが削除されていること。"
+    },
+    {
+      "id": "NHI-AZ-001",
+      "title": "アプリ登録がクライアントシークレット(パスワード資格情報)を保持している",
+      "severity": "high",
+      "owasp": [
+        "NHI4",
+        "NHI7"
+      ],
+      "docRef": "F-02",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "azure.app_registration"
+          },
+          {
+            "forEach": "credentials",
+            "where": {
+              "all": [
+                {
+                  "field": "type",
+                  "op": "eq",
+                  "value": "password"
+                },
+                {
+                  "field": "status",
+                  "op": "eq",
+                  "value": "Active"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "message": "アプリ登録 {name} がクライアントシークレットを保持している。",
+      "expected": "証明書資格情報またはフェデレーション ID 資格情報(FIC)を使い、共有シークレットを保持しない。",
+      "remediation": "FIC または証明書へ移行し、シークレットを削除する。テナント既定の application management policy で再作成を禁止する。",
+      "validation": "アプリの passwordCredentials が空であること。"
+    },
+    {
+      "id": "NHI-AZ-002",
+      "title": "資格情報の有効期間が長すぎる、または無期限",
+      "severity": "high",
+      "owasp": [
+        "NHI7"
+      ],
+      "docRef": "F-02",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "in",
+            "value": [
+              "azure.app_registration",
+              "azure.service_principal"
+            ]
+          },
+          {
+            "forEach": "credentials",
+            "where": {
+              "all": [
+                {
+                  "field": "status",
+                  "op": "eq",
+                  "value": "Active"
+                },
+                {
+                  "any": [
+                    {
+                      "field": "lifetimeDays",
+                      "op": "gt",
+                      "value": "@credentialMaxLifetimeDays"
+                    },
+                    {
+                      "field": "expiresAt",
+                      "op": "missing"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "message": "{name} の資格情報の有効期間が許容値を超えている、または無期限。",
+      "expected": "application management policy の maxLifetime でテナント全体に上限を強制する。",
+      "remediation": "既存資格情報を短寿命で再発行し、テナント既定ポリシーで maxLifetime を設定する。",
+      "validation": "全資格情報の endDateTime が発行日から閾値以内であること。"
+    },
+    {
+      "id": "NHI-AZ-003",
+      "title": "アプリ登録に所有者が設定されていない",
+      "severity": "high",
+      "owasp": [
+        "NHI1"
+      ],
+      "docRef": "F-01",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "in",
+            "value": [
+              "azure.app_registration",
+              "azure.service_principal"
+            ]
+          },
+          {
+            "field": "owners",
+            "op": "count_lte",
+            "value": 0
+          }
+        ]
+      },
+      "message": "{name} に所有者が設定されておらず、廃止判断ができない。",
+      "expected": "全 NHI に有効な所有者(在職者)が紐づき、四半期アクセスレビューの承認者になれる。",
+      "remediation": "所有者を設定する。特定できない場合は凍結(accountEnabled=false)し、一定期間後に削除する。",
+      "validation": "owners が 1 件以上で、いずれも有効なユーザーであること。"
+    },
+    {
+      "id": "NHI-AZ-004",
+      "title": "サービスプリンシパルが長期間サインインしていない",
+      "severity": "medium",
+      "owasp": [
+        "NHI1"
+      ],
+      "docRef": "F-08",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "in",
+            "value": [
+              "azure.app_registration",
+              "azure.service_principal"
+            ]
+          },
+          {
+            "field": "lastUsedDays",
+            "op": "gt",
+            "value": "@identityUnusedDays"
+          }
+        ]
+      },
+      "message": "{name} が {lastUsedDays} 日間サインインしていない。",
+      "expected": "未使用 NHI は無効化・削除されている。",
+      "remediation": "所有者に確認のうえ accountEnabled=false で凍結し、苦情が無ければ削除する。",
+      "validation": "サインインログに当該 SP の記録が無く、オブジェクトが削除されていること。",
+      "caveat": "Entra のサインインログ保持は Free 7 日 / P1・P2 30 日。長期退避が無い環境ではこの判定を信頼してはならない。 既定の追跡期間は 180 日。四半期バッチ・年次ジョブ・災対切替でしか動かない NHI がある環境では identityUnusedDays を 365 に上げること。窓が短いと「未使用」と誤判定して稼働中の処理を壊す。"
+    },
+    {
+      "id": "NHI-AZ-005",
+      "title": "高権限の Graph アプリケーション権限が付与されている",
+      "severity": "critical",
+      "owasp": [
+        "NHI5",
+        "NHI3"
+      ],
+      "docRef": "CAP-CONSENT",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "in",
+            "value": [
+              "azure.app_registration",
+              "azure.service_principal"
+            ]
+          },
+          {
+            "field": "permissions.graphAppRoles[]",
+            "op": "in",
+            "value": [
+              "RoleManagement.ReadWrite.Directory",
+              "Application.ReadWrite.All",
+              "AppRoleAssignment.ReadWrite.All",
+              "Directory.ReadWrite.All",
+              "PrivilegedAccess.ReadWrite.AzureADGroup"
+            ]
+          }
+        ]
+      },
+      "message": "{name} にテナント乗っ取りに直結する Graph アプリケーション権限が付与されている。",
+      "expected": "これらの権限は付与しない。必要な場合は対象を限定した権限へ置き換える。",
+      "remediation": "アプリロール割り当てを削除し、必要最小の権限へ置き換える。ユーザー同意を制限し管理者同意ワークフローを有効化する。",
+      "validation": "appRoleAssignments に当該権限が存在しないこと。"
+    },
+    {
+      "id": "NHI-AZ-006",
+      "title": "マルチテナントのアプリ登録が環境分離を破っている",
+      "severity": "medium",
+      "owasp": [
+        "NHI8"
+      ],
+      "docRef": "CAP-ISOLATION",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "azure.app_registration"
+          },
+          {
+            "field": "signInAudience",
+            "op": "in",
+            "value": [
+              "AzureADMultipleOrgs",
+              "AzureADandPersonalMicrosoftAccount"
+            ]
+          }
+        ]
+      },
+      "message": "アプリ登録 {name} がマルチテナント構成で、テナント境界を跨いで利用されうる。",
+      "expected": "内部用途のアプリは AzureADMyOrg(単一テナント)。",
+      "remediation": "signInAudience を AzureADMyOrg に変更する。外部提供が要件なら App Instance Property Lock を有効化する。",
+      "validation": "signInAudience が AzureADMyOrg であること。"
+    },
+    {
+      "id": "NHI-AZ-007",
+      "title": "ユーザー割り当てマネージド ID を多数のリソースが共有している",
+      "severity": "medium",
+      "owasp": [
+        "NHI9"
+      ],
+      "docRef": "F-03",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "azure.managed_identity"
+          },
+          {
+            "field": "attachedTo",
+            "op": "count_gte",
+            "value": "@sharedIdentityFanout"
+          }
+        ]
+      },
+      "message": "マネージド ID {name} を複数のリソースが共有している。",
+      "expected": "ワークロード単位に分離する。共有が必要な場合も権限は最小公倍数ではなく最小限にする。",
+      "remediation": "リソースごとにシステム割り当て ID かユーザー割り当て ID を分ける。",
+      "validation": "1 マネージド ID につきアタッチ先が 1 リソースであること。"
+    },
+    {
+      "id": "NHI-AZ-008",
+      "title": "FIC 数が上限 20 に接近している",
+      "severity": "low",
+      "owasp": [
+        "NHI6"
+      ],
+      "docRef": "CAP-FEDERATION",
+      "target": "identities",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "in",
+            "value": [
+              "azure.app_registration",
+              "azure.managed_identity"
+            ]
+          },
+          {
+            "field": "federatedCredentials",
+            "op": "count_gte",
+            "value": "@ficNearLimit"
+          }
+        ]
+      },
+      "message": "{name} のフェデレーション ID 資格情報が上限 20 に接近している。",
+      "expected": "上限に達する前にアプリを分割する。上限回避のために subject を緩めてはならない。",
+      "remediation": "利用単位でアプリ登録を分割する。flexible FIC はプレビューのため本番前提にしない。",
+      "validation": "federatedIdentityCredentials の件数が上限に対して余裕があること。"
+    },
+    {
+      "id": "NHI-AZ-009",
+      "title": "テナント既定の application management policy が未設定",
+      "severity": "high",
+      "owasp": [
+        "NHI7"
+      ],
+      "docRef": "F-02",
+      "target": "scopes",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "azure.tenant"
+          },
+          {
+            "field": "settings.appMgmtPolicyRestrictsPasswords",
+            "op": "ne",
+            "value": true
+          }
+        ]
+      },
+      "message": "テナント {id} でクライアントシークレット作成を禁止/制限する既定ポリシーが未設定。",
+      "expected": "defaultAppManagementPolicy で passwordAddition を禁止し、maxLifetime を強制する。",
+      "remediation": "restrictForAppsCreatedAfterDateTime を移行スイッチとして段階適用する(既存アプリには遡及しない)。",
+      "validation": "指定日以降に作成したアプリでシークレット追加が失敗すること。"
+    },
+    {
+      "id": "NHI-AZ-010",
+      "title": "ユーザー同意が制限されていない",
+      "severity": "high",
+      "owasp": [
+        "NHI3",
+        "NHI5"
+      ],
+      "docRef": "CAP-CONSENT",
+      "target": "scopes",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "azure.tenant"
+          },
+          {
+            "field": "settings.userConsentRestricted",
+            "op": "ne",
+            "value": true
+          }
+        ]
+      },
+      "message": "テナント {id} でユーザーによるアプリ同意が制限されていない(不正同意付与の経路)。",
+      "expected": "ユーザー同意を禁止または検証済み発行元の低リスク権限に限定し、管理者同意ワークフローを有効化する。",
+      "remediation": "authorizationPolicy の permissionGrantPoliciesAssigned を絞り、管理者同意ワークフローを有効化する。",
+      "validation": "一般ユーザーが新規アプリへ同意できず、要求が承認フローに入ること。"
+    },
+    {
+      "id": "NHI-AZ-011",
+      "title": "サインインログの長期退避が構成されていない",
+      "severity": "high",
+      "owasp": [
+        "NHI1"
+      ],
+      "docRef": "F-08",
+      "target": "scopes",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "azure.tenant"
+          },
+          {
+            "field": "settings.signInLogExport",
+            "op": "ne",
+            "value": true
+          }
+        ]
+      },
+      "message": "テナント {id} でサインインログの長期退避(診断設定)が構成されていない。",
+      "expected": "Log Analytics / Sentinel へ 13 か月以上退避する。P1 以上のライセンスが前提。",
+      "remediation": "診断設定で SignInLogs と ServicePrincipalSignInLogs をエクスポートする。棚卸しより先に実施すること。",
+      "validation": "13 か月以上前の SP サインインが検索できること。",
+      "caveat": "これが未構成の環境では NHI-AZ-004(未使用判定)の結果を信頼してはならない。"
+    },
+    {
+      "id": "NHI-AZ-012",
+      "title": "ストレージアカウントが共有キー認証を許可している",
+      "severity": "high",
+      "owasp": [
+        "NHI4",
+        "NHI7"
+      ],
+      "docRef": "CAP-PREVENT",
+      "target": "resources",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "eq",
+            "value": "azure.storage_account"
+          },
+          {
+            "field": "allowSharedKeyAccess",
+            "op": "ne",
+            "value": false
+          }
+        ]
+      },
+      "message": "ストレージアカウント {name} が共有キー認証を許可している。",
+      "expected": "allowSharedKeyAccess=false で Entra 認証のみにする。",
+      "remediation": "利用側を Entra 認証へ移行後に無効化し、Azure Policy の deny で再発を防ぐ。",
+      "validation": "allowSharedKeyAccess が false であること。"
+    },
+    {
+      "id": "NHI-X-001",
+      "title": "証跡が取得できていない領域がある",
+      "severity": "info",
+      "owasp": [],
+      "docRef": "CAP-EVIDENCE",
+      "target": "coverageGaps",
+      "where": {
+        "field": "area",
+        "op": "exists"
+      },
+      "message": "{area} の証跡を取得できなかった(理由: {reason})。",
+      "expected": "評価対象の全領域について証跡が取得できている。",
+      "remediation": "必要な読み取り権限を付与して再収集する。取得できない領域は「問題なし」ではなく未評価として扱う。",
+      "validation": "再収集で coverageGaps が空になること。"
+    },
+    {
+      "id": "NHI-X-002",
+      "title": "NHI の所有者を特定できる割合が低い",
+      "severity": "medium",
+      "owasp": [
+        "NHI1"
+      ],
+      "docRef": "F-01",
+      "target": "scopes",
+      "where": {
+        "all": [
+          {
+            "field": "type",
+            "op": "in",
+            "value": [
+              "aws.account",
+              "azure.tenant"
+            ]
+          },
+          {
+            "field": "settings.ownershipRatio",
+            "op": "lt",
+            "value": "@minOwnershipRatio"
+          }
+        ]
+      },
+      "message": "{name}: 所有者を特定できない NHI が {settings.identitiesWithoutOwner} 件 / 全 {settings.identityCount} 件(特定率 {settings.ownershipRatio})。",
+      "expected": "全 NHI に在職者の所有者が紐づき、四半期アクセスレビューの承認者になれる。",
+      "remediation": "AWS は Owner タグの付与を SCP/Config で強制し、Azure はアプリ登録の owners を必須にする。特定できないものは凍結し、一定期間後に削除する。",
+      "validation": "所有者特定率が目標値以上であること。凍結後の復活要請件数を誤検知率の代理指標として記録する。",
+      "caveat": "AWS には所有者の概念が無くタグ運用に依存するため、タグが付いていても実在性(在職者か)は別途確認が必要。これが F-01 の本質であり、ネイティブでは埋まらない。"
+    }
+  ]
+}

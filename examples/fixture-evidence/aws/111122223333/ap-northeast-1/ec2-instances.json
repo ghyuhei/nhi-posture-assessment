@@ -1,0 +1,35 @@
+{
+  "Reservations": [
+    {
+      "Instances": [
+        {
+          "InstanceId": "i-0a1",
+          "MetadataOptions": {
+            "HttpTokens": "optional",
+            "HttpEndpoint": "enabled"
+          },
+          "IamInstanceProfile": {
+            "Arn": "arn:aws:iam::111122223333:instance-profile/shared-role"
+          }
+        },
+        {
+          "InstanceId": "i-0a2",
+          "MetadataOptions": {
+            "HttpTokens": "required",
+            "HttpEndpoint": "enabled"
+          },
+          "IamInstanceProfile": {
+            "Arn": "arn:aws:iam::111122223333:instance-profile/shared-role"
+          }
+        },
+        {
+          "InstanceId": "i-0a3",
+          "MetadataOptions": {
+            "HttpTokens": "optional",
+            "HttpEndpoint": "enabled"
+          }
+        }
+      ]
+    }
+  ]
+}

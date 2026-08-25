@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NHI ポスチャ評価レポート</title><style>
+:root{--bg:#fff;--fg:#1a1a2e;--muted:#5c6370;--border:#d8dce3;--accent:#7b2ff7;
+--card:#f8f9fb;--code:#f0f2f5;--critical:#b3001b;--high:#c2680a;--medium:#8a6d00;
+--low:#3a6ea5;--info:#5c6370;--ok:#0a7d33}
+@media(prefers-color-scheme:dark){:root{--bg:#14161c;--fg:#e4e6eb;--muted:#9aa1ad;
+--border:#333945;--accent:#b98cff;--card:#1a1e26;--code:#21252e;--critical:#ff6b6b;
+--high:#ffb454;--medium:#ffd166;--low:#7fb3e8;--info:#9aa1ad;--ok:#5dd48a}}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
+background:var(--bg);color:var(--fg);line-height:1.6;font-size:15px}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 18px 70px}
+h1{font-size:1.4rem;border-bottom:3px solid var(--accent);padding-bottom:9px;margin:6px 0 4px}
+.meta{color:var(--muted);font-size:.84rem;margin-bottom:14px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.pill{border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:.85rem;
+background:var(--card);cursor:pointer;user-select:none}
+.pill.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.count{display:inline-block;min-width:1.6em;text-align:center;font-weight:700}
+.gapbox{border:1px solid var(--high);background:var(--card);border-radius:8px;padding:10px 14px;
+margin:12px 0;font-size:.87rem}
+.f{border:1px solid var(--border);border-left:6px solid var(--info);border-radius:0 8px 8px 0;
+margin:12px 0;padding:12px 15px;background:var(--card)}
+.f.critical{border-left-color:var(--critical)}.f.high{border-left-color:var(--high)}
+.f.medium{border-left-color:var(--medium)}.f.low{border-left-color:var(--low)}
+.f h3{margin:0 0 4px;font-size:1rem}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px;font-size:.74rem}
+.tag{border:1px solid var(--border);border-radius:10px;padding:1px 8px;color:var(--muted)}
+.tag.sev{font-weight:700;color:#fff;border:none}
+.tag.sev.critical{background:var(--critical)}.tag.sev.high{background:var(--high)}
+.tag.sev.medium{background:var(--medium);color:#1a1a2e}.tag.sev.low{background:var(--low)}
+.tag.sev.info{background:var(--info)}
+.tag.warn{border-color:var(--high);color:var(--high);font-weight:700}
+dl{margin:8px 0 0;font-size:.89rem}
+dt{font-weight:700;color:var(--muted);font-size:.78rem;margin-top:7px}
+dd{margin:2px 0 0}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px;
+padding-top:10px;border-top:1px dashed var(--border)}
+select,textarea,input{font:inherit;background:var(--bg);color:var(--fg);
+border:1px solid var(--border);border-radius:6px;padding:5px 8px}
+textarea{width:100%;min-height:48px;resize:vertical;margin-top:6px}
+code{font-family:ui-monospace,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:4px;font-size:.86em}
+button{font:inherit;background:var(--card);color:var(--fg);border:1px solid var(--border);
+border-radius:6px;padding:6px 14px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+.masked .mask{background:var(--fg);color:transparent;border-radius:3px;user-select:none}
+.masked .mask *{color:transparent}
+h2{font-size:1.1rem;margin:26px 0 8px;border-left:5px solid var(--accent);padding-left:10px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;margin:8px 0}
+th{background:var(--card);text-align:left;padding:7px 9px;border-bottom:2px solid var(--border)}
+td{padding:7px 9px;border-bottom:1px solid var(--border);vertical-align:middle}
+.hint{font-size:.82rem;color:var(--muted)}
+footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--border);
+color:var(--muted);font-size:.8rem}
+@media print{.bar,.ctl button,#tools{display:none}.f{break-inside:avoid}}
+</style></head>
+<body data-report-id="20260824T234139+0000"><div class="wrap">
+<h1>NHI ポスチャ評価レポート</h1>
+<div class="meta">生成 2026-08-24T23:41:39+00:00 / 証跡 2026-08-25T00:00:00+00:00<br>
+対象スコープ: aws:111122223333, azure:contoso-tenant &nbsp;·&nbsp; ルールパック: nhi-core v1.0.0 &nbsp;·&nbsp;
+表示中 <span id="shown">0</span> / 33 件</div>
+<div class="gapbox"><strong>証跡を取得できなかった領域が 3 件あります。未取得を「問題なし」と読み替えないでください。</strong><ul><li><code>aws:<span class="mask">111122223333</span>:organizations</code> — permission_denied: メンバーアカウントからは組織ポリシーを列挙できない</li><li><code>aws:scope</code> — scope_limited: 収集対象リージョン: ap-northeast-1, us-east-1。これ以外のリージョンは未評価。</li><li><code>aws:<span class="mask">111122223333</span>:us-east-1:ec2-instances</code> — not_collected: リージョン us-east-1 のインスタンスを取得できていない</li></ul></div>
+
+
+<h2>OWASP NHI Top 10 別の検出状況</h2><table><thead><tr><th>カテゴリ</th><th>最悪</th><th>件数</th><th>該当ルール</th></tr></thead><tbody><tr><td><strong>NHI1</strong></td><td><span class="tag sev high">High</span></td><td>7</td><td><code>NHI-AZ-003, NHI-AWS-003, NHI-AWS-007, NHI-AWS-012, NHI-AZ-004, NHI-X-002</code></td></tr><tr><td><strong>NHI2</strong></td><td><span class="tag sev critical">Critical</span></td><td>2</td><td><code>NHI-AWS-009, NHI-AWS-013</code></td></tr><tr><td><strong>NHI3</strong></td><td><span class="tag sev critical">Critical</span></td><td>4</td><td><code>NHI-AWS-005B, NHI-AZ-005, NHI-AWS-006, NHI-AZ-010</code></td></tr><tr><td><strong>NHI4</strong></td><td><span class="tag sev critical">Critical</span></td><td>8</td><td><code>NHI-AWS-009, NHI-AWS-001, NHI-AWS-010, NHI-AZ-001, NHI-AZ-012, NHI-AWS-009B</code></td></tr><tr><td><strong>NHI5</strong></td><td><span class="tag sev critical">Critical</span></td><td>4</td><td><code>NHI-AWS-004, NHI-AZ-005, NHI-AZ-010, NHI-AWS-012</code></td></tr><tr><td><strong>NHI6</strong></td><td><span class="tag sev critical">Critical</span></td><td>3</td><td><code>NHI-AWS-005, NHI-AWS-005B, NHI-AZ-008</code></td></tr><tr><td><strong>NHI7</strong></td><td><span class="tag sev critical">Critical</span></td><td>9</td><td><code>NHI-AWS-004, NHI-AWS-001, NHI-AWS-002, NHI-AZ-001, NHI-AZ-002, NHI-AZ-009, NHI-AZ-012</code></td></tr><tr><td><strong>NHI8</strong></td><td><span class="tag sev critical">Critical</span></td><td>2</td><td><code>NHI-AWS-005, NHI-AZ-006</code></td></tr><tr><td><strong>NHI9</strong></td><td><span class="tag sev high">High</span></td><td>3</td><td><code>NHI-AWS-014, NHI-AWS-008, NHI-AZ-007</code></td></tr><tr><td><strong>NHI10</strong></td><td><span class="tag sev high">High</span></td><td>1</td><td><code>NHI-AWS-014</code></td></tr></tbody></table><p class="hint">ここに現れないカテゴリは「問題なし」ではなく、本パックに該当ルールが無いか、証跡が取得できていない可能性がある。NHI3(サードパーティ)と NHI9(再利用)はクラウドネイティブでは原理的に検出しきれない領域である。</p>
+<div class="bar"><span class="pill" data-sev="critical"><span class="count">6</span> Critical</span><span class="pill" data-sev="high"><span class="count">13</span> High</span><span class="pill" data-sev="medium"><span class="count">10</span> Medium</span><span class="pill" data-sev="low"><span class="count">1</span> Low</span><span class="pill" data-sev="info"><span class="count">3</span> Info</span>
+<label class="pill"><input type="checkbox" id="hideDone"> 対応済み・受容を隠す</label></div>
+<div id="tools" class="bar">
+<button id="exportBtn">JSON 書き出し</button>
+<button id="importBtn">JSON 読み込み</button>
+<button id="maskBtn">公開用マスク切替</button>
+<button onclick="window.print()">印刷 / PDF</button></div>
+<textarea id="io" placeholder="ここに JSON が出力されます / 貼り付けて読み込みます"></textarea>
+<div class="f critical" data-id="NHI-AWS-004-0006" data-sev="critical"
+ data-rule="NHI-AWS-004" data-resource="aws:111122223333:user/legacy-batch">
+<h3>管理者相当の権限を持つ IAM ユーザーが長期キーを保持している</h3>
+<div class="tags"><span class="tag sev critical">Critical</span><span class="tag">NHI-AWS-004</span><span class="tag">OWASP NHI5</span><span class="tag">OWASP NHI7</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">legacy-batch</code>
+ <span style="opacity:.7">(aws.iam_user)</span></div>
+<dl><dt>検出内容</dt><dd>IAM ユーザー <span class="mask">legacy-batch</span> が管理者相当の権限と有効な長期キーを同時に持つ。</dd><dt>あるべき状態</dt><dd>管理者相当の権限は人間の一時セッションにのみ紐づく。</dd><dt>対処</dt><dd>最優先で無効化する。恒久対応として権限を実使用実績から再生成し、アクセスをロール経由に移す。</dd><dt>確認方法</dt><dd>当該ユーザーに AdministratorAccess 相当が付与されておらず、Active キーが存在しないこと。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f critical" data-id="NHI-AWS-005-0007" data-sev="critical"
+ data-rule="NHI-AWS-005" data-resource="aws:111122223333:role/github-deploy">
+<h3>OIDC 信頼ポリシーの sub がワイルドカードを許している</h3>
+<div class="tags"><span class="tag sev critical">Critical</span><span class="tag">NHI-AWS-005</span><span class="tag">OWASP NHI6</span><span class="tag">OWASP NHI8</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">github-deploy</code>
+ <span style="opacity:.7">(aws.iam_role)</span></div>
+<dl><dt>検出内容</dt><dd>ロール <span class="mask">github-deploy</span> の信頼ポリシーが sub のワイルドカードを許容している。</dd><dt>あるべき状態</dt><dd>sub は完全一致で固定し、可能なら provider 固有クレーム(GitHub の repository_id 等の不変値)で縛る。</dd><dt>対処</dt><dd>信頼ポリシーの StringLike を StringEquals に変更し、リポジトリ名ではなくリポジトリ ID を使う。</dd><dt>確認方法</dt><dd>aws iam get-role の AssumeRolePolicyDocument に sub のワイルドカードが存在しないこと。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f critical" data-id="NHI-AWS-005B-0008" data-sev="critical"
+ data-rule="NHI-AWS-005B" data-resource="aws:111122223333:role/wide-open-oidc">
+<h3>フェデレーション信頼に条件が一切設定されていない</h3>
+<div class="tags"><span class="tag sev critical">Critical</span><span class="tag">NHI-AWS-005B</span><span class="tag">OWASP NHI6</span><span class="tag">OWASP NHI3</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">wide-open-oidc</code>
+ <span style="opacity:.7">(aws.iam_role)</span></div>
+<dl><dt>検出内容</dt><dd>ロール <span class="mask">wide-open-oidc</span> のフェデレーション信頼に Condition が無く、当該 IdP がトークンを発行できる全ワークロードが引き受けられる。</dd><dt>あるべき状態</dt><dd>aud と sub を最低限固定し、可能なら provider 固有クレームの不変値で縛る。</dd><dt>対処</dt><dd>信頼ポリシーに StringEquals による aud / sub 条件を追加する。</dd><dt>確認方法</dt><dd>信頼ポリシーの各 Allow ステートメントに Condition が存在すること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f critical" data-id="NHI-AWS-009-0012" data-sev="critical"
+ data-rule="NHI-AWS-009" data-resource="aws:111122223333:instance/i-0a1">
+<h3>EC2 インスタンスが IMDSv1 を許容している</h3>
+<div class="tags"><span class="tag sev critical">Critical</span><span class="tag">NHI-AWS-009</span><span class="tag">OWASP NHI4</span><span class="tag">OWASP NHI2</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">i-0a1</code>
+ <span style="opacity:.7">(aws.ec2_instance)</span></div>
+<dl><dt>検出内容</dt><dd>インスタンス <span class="mask">i-0a1</span> が IMDSv1 を許容し、かつ IAM ロールがアタッチされている。SSRF 一発で一時認証情報を奪取されうる。</dd><dt>あるべき状態</dt><dd>全インスタンスで HttpTokens=required(IMDSv2 必須)。</dd><dt>対処</dt><dd>aws ec2 modify-instance-metadata-options --http-tokens required --http-endpoint enabled を適用し、アカウント既定も全リージョンで設定する。</dd><dt>確認方法</dt><dd>MetadataNoTokenRejected メトリクスが 0 に収束し、HttpTokens=optional のインスタンスが存在しないこと。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f critical" data-id="NHI-AWS-013-0017" data-sev="critical"
+ data-rule="NHI-AWS-013" data-resource="aws:111122223333:role/quarantined-role">
+<h3>漏洩キーの隔離ポリシーが適用されている(進行中インシデント)</h3>
+<div class="tags"><span class="tag sev critical">Critical</span><span class="tag">NHI-AWS-013</span><span class="tag">OWASP NHI2</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">quarantined-role</code>
+ <span style="opacity:.7">(aws.iam_role)</span></div>
+<dl><dt>検出内容</dt><dd><span class="mask">quarantined-role</span> に AWSCompromisedKeyQuarantine 系ポリシーが適用されている。AWS が資格情報の露出を検知した状態。</dd><dt>あるべき状態</dt><dd>隔離ポリシーが適用された NHI は存在しない。</dd><dt>対処</dt><dd>隔離はキーを無効化しない点に注意。直ちにキーを無効化し、CloudTrail で悪用の有無を確認し、AWS のサポートケースの指示に従う。</dd><dt>確認方法</dt><dd>隔離ポリシーがデタッチされ、当該キーが削除されていること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f critical" data-id="NHI-AZ-005-0022" data-sev="critical"
+ data-rule="NHI-AZ-005" data-resource="azure:contoso-tenant:app/44444444-4444-4444-4444-444444444444">
+<h3>高権限の Graph アプリケーション権限が付与されている</h3>
+<div class="tags"><span class="tag sev critical">Critical</span><span class="tag">NHI-AZ-005</span><span class="tag">OWASP NHI5</span><span class="tag">OWASP NHI3</span><span class="tag">AZURE</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">graph-admin-app</code>
+ <span style="opacity:.7">(azure.app_registration)</span></div>
+<dl><dt>検出内容</dt><dd><span class="mask">graph-admin-app</span> にテナント乗っ取りに直結する Graph アプリケーション権限が付与されている。</dd><dt>あるべき状態</dt><dd>これらの権限は付与しない。必要な場合は対象を限定した権限へ置き換える。</dd><dt>対処</dt><dd>アプリロール割り当てを削除し、必要最小の権限へ置き換える。ユーザー同意を制限し管理者同意ワークフローを有効化する。</dd><dt>確認方法</dt><dd>appRoleAssignments に当該権限が存在しないこと。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AWS-001-0001" data-sev="high"
+ data-rule="NHI-AWS-001" data-resource="aws:111122223333:user/legacy-batch">
+<h3>IAM ユーザーが有効な長期アクセスキーを保持している</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AWS-001</span><span class="tag">OWASP NHI7</span><span class="tag">OWASP NHI4</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">legacy-batch</code>
+ <span style="opacity:.7">(aws.iam_user)</span></div>
+<dl><dt>検出内容</dt><dd>IAM ユーザー <span class="mask">legacy-batch</span> が有効な長期アクセスキーを保持している。</dd><dt>あるべき状態</dt><dd>ワークロードは IAM ロール、CI/CD は OIDC フェデレーションを使い、IAM ユーザーのアクセスキーは存在しない。</dd><dt>対処</dt><dd>利用元をロール/OIDC へ移行し、キーを無効化してから削除する。再発防止に SCP で iam:CreateAccessKey を Deny する。</dd><dt>確認方法</dt><dd>aws iam list-access-keys --user-name &lt;name&gt; が Active なキーを返さないこと。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AWS-001-0002" data-sev="high"
+ data-rule="NHI-AWS-001" data-resource="aws:111122223333:user/rotated-user">
+<h3>IAM ユーザーが有効な長期アクセスキーを保持している</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AWS-001</span><span class="tag">OWASP NHI7</span><span class="tag">OWASP NHI4</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">rotated-user</code>
+ <span style="opacity:.7">(aws.iam_user)</span></div>
+<dl><dt>検出内容</dt><dd>IAM ユーザー <span class="mask">rotated-user</span> が有効な長期アクセスキーを保持している。</dd><dt>あるべき状態</dt><dd>ワークロードは IAM ロール、CI/CD は OIDC フェデレーションを使い、IAM ユーザーのアクセスキーは存在しない。</dd><dt>対処</dt><dd>利用元をロール/OIDC へ移行し、キーを無効化してから削除する。再発防止に SCP で iam:CreateAccessKey を Deny する。</dd><dt>確認方法</dt><dd>aws iam list-access-keys --user-name &lt;name&gt; が Active なキーを返さないこと。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AWS-001-0003" data-sev="high"
+ data-rule="NHI-AWS-001" data-resource="aws:111122223333:user/shared-ops-account">
+<h3>IAM ユーザーが有効な長期アクセスキーを保持している</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AWS-001</span><span class="tag">OWASP NHI7</span><span class="tag">OWASP NHI4</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">shared-ops-account</code>
+ <span style="opacity:.7">(aws.iam_user)</span></div>
+<dl><dt>検出内容</dt><dd>IAM ユーザー <span class="mask">shared-ops-account</span> が有効な長期アクセスキーを保持している。</dd><dt>あるべき状態</dt><dd>ワークロードは IAM ロール、CI/CD は OIDC フェデレーションを使い、IAM ユーザーのアクセスキーは存在しない。</dd><dt>対処</dt><dd>利用元をロール/OIDC へ移行し、キーを無効化してから削除する。再発防止に SCP で iam:CreateAccessKey を Deny する。</dd><dt>確認方法</dt><dd>aws iam list-access-keys --user-name &lt;name&gt; が Active なキーを返さないこと。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AWS-002-0004" data-sev="high"
+ data-rule="NHI-AWS-002" data-resource="aws:111122223333:user/legacy-batch">
+<h3>アクセスキーが許容年齢を超過している</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AWS-002</span><span class="tag">OWASP NHI7</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">legacy-batch</code>
+ <span style="opacity:.7">(aws.iam_user)</span></div>
+<dl><dt>検出内容</dt><dd>IAM ユーザー <span class="mask">legacy-batch</span> のアクセスキーが 967 日経過している。</dd><dt>あるべき状態</dt><dd>IAM アクセスキーには有効期限の概念が無いため、そもそも保持しない。</dd><dt>対処</dt><dd>ロール/OIDC へ移行して削除する。移行が完了するまでの暫定策としてのみローテーションを行う。</dd><dt>確認方法</dt><dd>認証情報レポートの access_key_1_last_rotated が閾値内、または当該ユーザーが存在しないこと。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AWS-006-0009" data-sev="high"
+ data-rule="NHI-AWS-006" data-resource="aws:111122223333:role/vendor-access">
+<h3>外部アカウントを ExternalId 無しで信頼している</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AWS-006</span><span class="tag">OWASP NHI3</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">vendor-access</code>
+ <span style="opacity:.7">(aws.iam_role)</span></div>
+<dl><dt>検出内容</dt><dd>ロール <span class="mask">vendor-access</span> が組織外プリンシパルを sts:ExternalId 条件なしで信頼している。</dd><dt>あるべき状態</dt><dd>サードパーティ向けロールは sts:ExternalId を必須にし、混乱した代理human問題を防ぐ。</dd><dt>対処</dt><dd>信頼ポリシーに sts:ExternalId 条件を追加し、値をサードパーティと共有せずテナント固有にする。</dd><dt>確認方法</dt><dd>信頼ポリシーの Condition に sts:ExternalId が存在すること。</dd><dt>注意</dt><dd>同一 AWS Organizations 内のアカウントは第三者ではないため除外している。組織を列挙できなかった場合は除外できず、確度が low に落ちる。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AWS-010-0014" data-sev="high"
+ data-rule="NHI-AWS-010" data-resource="aws:111122223333:ap-northeast-1">
+<h3>アカウント既定の IMDSv2 強制が未設定</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AWS-010</span><span class="tag">OWASP NHI4</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">111122223333/ap-northeast-1</code>
+ <span style="opacity:.7">(aws.account_region)</span></div>
+<dl><dt>検出内容</dt><dd>アカウント <span class="mask">111122223333</span> のリージョン ap-northeast-1 で IMDSv2 のアカウント既定が未設定。</dd><dt>あるべき状態</dt><dd>利用する全リージョンでアカウント既定を required にする(既存インスタンスには遡及しない点に注意)。</dd><dt>対処</dt><dd>aws ec2 modify-instance-metadata-defaults --http-tokens required をリージョンごとに実行し、SCP で ec2:MetadataHttpTokens を強制する。</dd><dt>確認方法</dt><dd>aws ec2 get-instance-metadata-defaults が required を返すこと。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AWS-014-0016" data-sev="high"
+ data-rule="NHI-AWS-014" data-resource="aws:111122223333:user/shared-ops-account">
+<h3>同一 IAM ユーザーが人間のコンソール利用と自動化用キーを兼ねている</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AWS-014</span><span class="tag">OWASP NHI10</span><span class="tag">OWASP NHI9</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">shared-ops-account</code>
+ <span style="opacity:.7">(aws.iam_user)</span></div>
+<dl><dt>検出内容</dt><dd>IAM ユーザー <span class="mask">shared-ops-account</span> はコンソールログイン実績と有効なアクセスキーの両方を持ち、人間の操作と自動処理が同一 ID に混在している。</dd><dt>あるべき状態</dt><dd>人間は IAM Identity Center 等の一時セッション、自動処理はロール。両者が同一 ID を共有しない。</dd><dt>対処</dt><dd>自動処理をロールへ移し、当該ユーザーからアクセスキーを削除する。人間のアクセスはフェデレーションに移行する。</dd><dt>確認方法</dt><dd>コンソール実績のあるプリンシパルに有効なアクセスキーが存在しないこと。</dd><dt>注意</dt><dd>監査証跡上、この ID の操作は人間か自動処理かを区別できない。インシデント時の説明責任が成立しない状態である。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AZ-001-0018" data-sev="high"
+ data-rule="NHI-AZ-001" data-resource="azure:contoso-tenant:app/11111111-1111-1111-1111-111111111111">
+<h3>アプリ登録がクライアントシークレット(パスワード資格情報)を保持している</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AZ-001</span><span class="tag">OWASP NHI4</span><span class="tag">OWASP NHI7</span><span class="tag">AZURE</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">legacy-batch-app</code>
+ <span style="opacity:.7">(azure.app_registration)</span></div>
+<dl><dt>検出内容</dt><dd>アプリ登録 <span class="mask">legacy-batch-app</span> がクライアントシークレットを保持している。</dd><dt>あるべき状態</dt><dd>証明書資格情報またはフェデレーション ID 資格情報(FIC)を使い、共有シークレットを保持しない。</dd><dt>対処</dt><dd>FIC または証明書へ移行し、シークレットを削除する。テナント既定の application management policy で再作成を禁止する。</dd><dt>確認方法</dt><dd>アプリの passwordCredentials が空であること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AZ-002-0019" data-sev="high"
+ data-rule="NHI-AZ-002" data-resource="azure:contoso-tenant:app/11111111-1111-1111-1111-111111111111">
+<h3>資格情報の有効期間が長すぎる、または無期限</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AZ-002</span><span class="tag">OWASP NHI7</span><span class="tag">AZURE</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">legacy-batch-app</code>
+ <span style="opacity:.7">(azure.app_registration)</span></div>
+<dl><dt>検出内容</dt><dd><span class="mask">legacy-batch-app</span> の資格情報の有効期間が許容値を超えている、または無期限。</dd><dt>あるべき状態</dt><dd>application management policy の maxLifetime でテナント全体に上限を強制する。</dd><dt>対処</dt><dd>既存資格情報を短寿命で再発行し、テナント既定ポリシーで maxLifetime を設定する。</dd><dt>確認方法</dt><dd>全資格情報の endDateTime が発行日から閾値以内であること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AZ-003-0020" data-sev="high"
+ data-rule="NHI-AZ-003" data-resource="azure:contoso-tenant:app/11111111-1111-1111-1111-111111111111">
+<h3>アプリ登録に所有者が設定されていない</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AZ-003</span><span class="tag">OWASP NHI1</span><span class="tag">AZURE</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">legacy-batch-app</code>
+ <span style="opacity:.7">(azure.app_registration)</span></div>
+<dl><dt>検出内容</dt><dd><span class="mask">legacy-batch-app</span> に所有者が設定されておらず、廃止判断ができない。</dd><dt>あるべき状態</dt><dd>全 NHI に有効な所有者(在職者)が紐づき、四半期アクセスレビューの承認者になれる。</dd><dt>対処</dt><dd>所有者を設定する。特定できない場合は凍結(accountEnabled=false)し、一定期間後に削除する。</dd><dt>確認方法</dt><dd>owners が 1 件以上で、いずれも有効なユーザーであること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AZ-009-0026" data-sev="high"
+ data-rule="NHI-AZ-009" data-resource="azure:contoso-tenant">
+<h3>テナント既定の application management policy が未設定</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AZ-009</span><span class="tag">OWASP NHI7</span><span class="tag">AZURE</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">contoso-tenant</code>
+ <span style="opacity:.7">(azure.tenant)</span></div>
+<dl><dt>検出内容</dt><dd>テナント <span class="mask">contoso-tenant</span> でクライアントシークレット作成を禁止/制限する既定ポリシーが未設定。</dd><dt>あるべき状態</dt><dd>defaultAppManagementPolicy で passwordAddition を禁止し、maxLifetime を強制する。</dd><dt>対処</dt><dd>restrictForAppsCreatedAfterDateTime を移行スイッチとして段階適用する(既存アプリには遡及しない)。</dd><dt>確認方法</dt><dd>指定日以降に作成したアプリでシークレット追加が失敗すること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AZ-010-0027" data-sev="high"
+ data-rule="NHI-AZ-010" data-resource="azure:contoso-tenant">
+<h3>ユーザー同意が制限されていない</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AZ-010</span><span class="tag">OWASP NHI3</span><span class="tag">OWASP NHI5</span><span class="tag">AZURE</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">contoso-tenant</code>
+ <span style="opacity:.7">(azure.tenant)</span></div>
+<dl><dt>検出内容</dt><dd>テナント <span class="mask">contoso-tenant</span> でユーザーによるアプリ同意が制限されていない(不正同意付与の経路)。</dd><dt>あるべき状態</dt><dd>ユーザー同意を禁止または検証済み発行元の低リスク権限に限定し、管理者同意ワークフローを有効化する。</dd><dt>対処</dt><dd>authorizationPolicy の permissionGrantPoliciesAssigned を絞り、管理者同意ワークフローを有効化する。</dd><dt>確認方法</dt><dd>一般ユーザーが新規アプリへ同意できず、要求が承認フローに入ること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f high" data-id="NHI-AZ-012-0028" data-sev="high"
+ data-rule="NHI-AZ-012" data-resource="azure:contoso-tenant:storage/stlegacy001">
+<h3>ストレージアカウントが共有キー認証を許可している</h3>
+<div class="tags"><span class="tag sev high">High</span><span class="tag">NHI-AZ-012</span><span class="tag">OWASP NHI4</span><span class="tag">OWASP NHI7</span><span class="tag">AZURE</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">stlegacy001</code>
+ <span style="opacity:.7">(azure.storage_account)</span></div>
+<dl><dt>検出内容</dt><dd>ストレージアカウント <span class="mask">stlegacy001</span> が共有キー認証を許可している。</dd><dt>あるべき状態</dt><dd>allowSharedKeyAccess=false で Entra 認証のみにする。</dd><dt>対処</dt><dd>利用側を Entra 認証へ移行後に無効化し、Azure Policy の deny で再発を防ぐ。</dd><dt>確認方法</dt><dd>allowSharedKeyAccess が false であること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f medium" data-id="NHI-AWS-003-0005" data-sev="medium"
+ data-rule="NHI-AWS-003" data-resource="aws:111122223333:user/legacy-batch">
+<h3>アクセスキーが長期間未使用のまま有効になっている</h3>
+<div class="tags"><span class="tag sev medium">Medium</span><span class="tag">NHI-AWS-003</span><span class="tag">OWASP NHI1</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">legacy-batch</code>
+ <span style="opacity:.7">(aws.iam_user)</span></div>
+<dl><dt>検出内容</dt><dd>IAM ユーザー <span class="mask">legacy-batch</span> の有効なアクセスキーが長期間未使用。</dd><dt>あるべき状態</dt><dd>未使用の資格情報は無効化・削除されている。</dd><dt>対処</dt><dd>所有者に確認のうえ無効化し、一定期間後に削除する(凍結→苦情が無ければ削除)。</dd><dt>確認方法</dt><dd>認証情報レポートで当該キーが Inactive または不存在であること。</dd><dt>注意</dt><dd>既定の追跡期間は 180 日。四半期バッチ・年次ジョブ・災対切替でしか動かない NHI がある環境では identityUnusedDays を 365 に上げること。窓が短いと「未使用」と誤判定して稼働中の処理を壊す。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f medium" data-id="NHI-AWS-007-0010" data-sev="medium"
+ data-rule="NHI-AWS-007" data-resource="aws:111122223333:role/stale-role">
+<h3>IAM ロールが長期間未使用</h3>
+<div class="tags"><span class="tag sev medium">Medium</span><span class="tag">NHI-AWS-007</span><span class="tag">OWASP NHI1</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">stale-role</code>
+ <span style="opacity:.7">(aws.iam_role)</span></div>
+<dl><dt>検出内容</dt><dd>ロール <span class="mask">stale-role</span> が 601 日間未使用。</dd><dt>あるべき状態</dt><dd>未使用ロールは削除されている。判定は業務周期(四半期/年次バッチ)を踏まえた追跡期間で行う。</dd><dt>対処</dt><dd>所有者を特定し、凍結(信頼ポリシーを空にする)→ 苦情が無ければ削除。</dd><dt>確認方法</dt><dd>aws iam get-role の RoleLastUsed が閾値内、または当該ロールが不存在であること。</dd><dt>注意</dt><dd>既定の追跡期間は 180 日。四半期バッチ・年次ジョブ・災対切替でしか動かない NHI がある環境では identityUnusedDays を 365 に上げること。窓が短いと「未使用」と誤判定して稼働中の処理を壊す。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f medium" data-id="NHI-AWS-008-0011" data-sev="medium"
+ data-rule="NHI-AWS-008" data-resource="aws:111122223333:role/shared-role">
+<h3>同一ロールを多数のワークロードが共有している</h3>
+<div class="tags"><span class="tag sev medium">Medium</span><span class="tag">NHI-AWS-008</span><span class="tag">OWASP NHI9</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">shared-role</code>
+ <span style="opacity:.7">(aws.iam_role)</span></div>
+<dl><dt>検出内容</dt><dd>ロール <span class="mask">shared-role</span> を複数のワークロードが共有している(影響範囲が拡大する)。</dd><dt>あるべき状態</dt><dd>NHI はワークロード単位に分離し、侵害時の影響範囲を限定する。</dd><dt>対処</dt><dd>ワークロードごとにロールを分割する。ネイティブに検出機構が無いため、IaC の静的検査で再発防止する。</dd><dt>確認方法</dt><dd>1 ロールにつきアタッチ先が 1 ワークロードであること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f medium" data-id="NHI-AWS-009B-0013" data-sev="medium"
+ data-rule="NHI-AWS-009B" data-resource="aws:111122223333:instance/i-0a3">
+<h3>EC2 インスタンスが IMDSv1 を許容している(ロール未アタッチ)</h3>
+<div class="tags"><span class="tag sev medium">Medium</span><span class="tag">NHI-AWS-009B</span><span class="tag">OWASP NHI4</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">i-0a3</code>
+ <span style="opacity:.7">(aws.ec2_instance)</span></div>
+<dl><dt>検出内容</dt><dd>インスタンス <span class="mask">i-0a3</span> が IMDSv1 を許容している。現時点ではロール未アタッチのため資格情報の露出は無いが、ロール付与時に即座に Critical 化する。</dd><dt>あるべき状態</dt><dd>全インスタンスで HttpTokens=required。</dd><dt>対処</dt><dd>modify-instance-metadata-options で required にする。ロール付与前に必ず閉じる。</dd><dt>確認方法</dt><dd>HttpTokens=optional のインスタンスが存在しないこと。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f medium" data-id="NHI-AWS-012-0015" data-sev="medium"
+ data-rule="NHI-AWS-012" data-resource="aws:111122223333">
+<h3>unused access アナライザーが有効化されていない</h3>
+<div class="tags"><span class="tag sev medium">Medium</span><span class="tag">NHI-AWS-012</span><span class="tag">OWASP NHI5</span><span class="tag">OWASP NHI1</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">111122223333</code>
+ <span style="opacity:.7">(aws.account)</span></div>
+<dl><dt>検出内容</dt><dd>アカウント <span class="mask">111122223333</span> で IAM Access Analyzer の unused access 分析が有効化されていない。</dd><dt>あるべき状態</dt><dd>組織レベルで有効化し、追跡期間を業務周期に合わせる(1〜365日で設定可)。</dd><dt>対処</dt><dd>委任管理者を設定し組織アナライザーを作成する。四半期・年次バッチがあるなら追跡期間を 365 日にする。</dd><dt>確認方法</dt><dd>aws accessanalyzer list-analyzers --type ORGANIZATION_UNUSED_ACCESS が結果を返すこと。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f medium" data-id="NHI-AZ-004-0021" data-sev="medium"
+ data-rule="NHI-AZ-004" data-resource="azure:contoso-tenant:app/11111111-1111-1111-1111-111111111111">
+<h3>サービスプリンシパルが長期間サインインしていない</h3>
+<div class="tags"><span class="tag sev medium">Medium</span><span class="tag">NHI-AZ-004</span><span class="tag">OWASP NHI1</span><span class="tag">AZURE</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">legacy-batch-app</code>
+ <span style="opacity:.7">(azure.app_registration)</span></div>
+<dl><dt>検出内容</dt><dd><span class="mask">legacy-batch-app</span> が 236 日間サインインしていない。</dd><dt>あるべき状態</dt><dd>未使用 NHI は無効化・削除されている。</dd><dt>対処</dt><dd>所有者に確認のうえ accountEnabled=false で凍結し、苦情が無ければ削除する。</dd><dt>確認方法</dt><dd>サインインログに当該 SP の記録が無く、オブジェクトが削除されていること。</dd><dt>注意</dt><dd>Entra のサインインログ保持は Free 7 日 / P1・P2 30 日。長期退避が無い環境ではこの判定を信頼してはならない。 既定の追跡期間は 180 日。四半期バッチ・年次ジョブ・災対切替でしか動かない NHI がある環境では identityUnusedDays を 365 に上げること。窓が短いと「未使用」と誤判定して稼働中の処理を壊す。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f medium" data-id="NHI-AZ-006-0023" data-sev="medium"
+ data-rule="NHI-AZ-006" data-resource="azure:contoso-tenant:app/33333333-3333-3333-3333-333333333333">
+<h3>マルチテナントのアプリ登録が環境分離を破っている</h3>
+<div class="tags"><span class="tag sev medium">Medium</span><span class="tag">NHI-AZ-006</span><span class="tag">OWASP NHI8</span><span class="tag">AZURE</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">multi-tenant-app</code>
+ <span style="opacity:.7">(azure.app_registration)</span></div>
+<dl><dt>検出内容</dt><dd>アプリ登録 <span class="mask">multi-tenant-app</span> がマルチテナント構成で、テナント境界を跨いで利用されうる。</dd><dt>あるべき状態</dt><dd>内部用途のアプリは AzureADMyOrg(単一テナント)。</dd><dt>対処</dt><dd>signInAudience を AzureADMyOrg に変更する。外部提供が要件なら App Instance Property Lock を有効化する。</dd><dt>確認方法</dt><dd>signInAudience が AzureADMyOrg であること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f medium" data-id="NHI-AZ-007-0024" data-sev="medium"
+ data-rule="NHI-AZ-007" data-resource="azure:contoso-tenant:mi/shared-mi">
+<h3>ユーザー割り当てマネージド ID を多数のリソースが共有している</h3>
+<div class="tags"><span class="tag sev medium">Medium</span><span class="tag">NHI-AZ-007</span><span class="tag">OWASP NHI9</span><span class="tag">AZURE</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">shared-mi</code>
+ <span style="opacity:.7">(azure.managed_identity)</span></div>
+<dl><dt>検出内容</dt><dd>マネージド ID <span class="mask">shared-mi</span> を複数のリソースが共有している。</dd><dt>あるべき状態</dt><dd>ワークロード単位に分離する。共有が必要な場合も権限は最小公倍数ではなく最小限にする。</dd><dt>対処</dt><dd>リソースごとにシステム割り当て ID かユーザー割り当て ID を分ける。</dd><dt>確認方法</dt><dd>1 マネージド ID につきアタッチ先が 1 リソースであること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f medium" data-id="NHI-X-002-0032" data-sev="medium"
+ data-rule="NHI-X-002" data-resource="aws:111122223333">
+<h3>NHI の所有者を特定できる割合が低い</h3>
+<div class="tags"><span class="tag sev medium">Medium</span><span class="tag">NHI-X-002</span><span class="tag">OWASP NHI1</span><span class="tag">AWS</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">111122223333</code>
+ <span style="opacity:.7">(aws.account)</span></div>
+<dl><dt>検出内容</dt><dd><span class="mask">111122223333</span>: 所有者を特定できない NHI が 9 件 / 全 13 件(特定率 0.308)。</dd><dt>あるべき状態</dt><dd>全 NHI に在職者の所有者が紐づき、四半期アクセスレビューの承認者になれる。</dd><dt>対処</dt><dd>AWS は Owner タグの付与を SCP/Config で強制し、Azure はアプリ登録の owners を必須にする。特定できないものは凍結し、一定期間後に削除する。</dd><dt>確認方法</dt><dd>所有者特定率が目標値以上であること。凍結後の復活要請件数を誤検知率の代理指標として記録する。</dd><dt>注意</dt><dd>AWS には所有者の概念が無くタグ運用に依存するため、タグが付いていても実在性(在職者か)は別途確認が必要。これが F-01 の本質であり、ネイティブでは埋まらない。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f medium" data-id="NHI-X-002-0033" data-sev="medium"
+ data-rule="NHI-X-002" data-resource="azure:contoso-tenant">
+<h3>NHI の所有者を特定できる割合が低い</h3>
+<div class="tags"><span class="tag sev medium">Medium</span><span class="tag">NHI-X-002</span><span class="tag">OWASP NHI1</span><span class="tag">AZURE</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">contoso-tenant</code>
+ <span style="opacity:.7">(azure.tenant)</span></div>
+<dl><dt>検出内容</dt><dd><span class="mask">contoso-tenant</span>: 所有者を特定できない NHI が 3 件 / 全 6 件(特定率 0.5)。</dd><dt>あるべき状態</dt><dd>全 NHI に在職者の所有者が紐づき、四半期アクセスレビューの承認者になれる。</dd><dt>対処</dt><dd>AWS は Owner タグの付与を SCP/Config で強制し、Azure はアプリ登録の owners を必須にする。特定できないものは凍結し、一定期間後に削除する。</dd><dt>確認方法</dt><dd>所有者特定率が目標値以上であること。凍結後の復活要請件数を誤検知率の代理指標として記録する。</dd><dt>注意</dt><dd>AWS には所有者の概念が無くタグ運用に依存するため、タグが付いていても実在性(在職者か)は別途確認が必要。これが F-01 の本質であり、ネイティブでは埋まらない。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f low" data-id="NHI-AZ-008-0025" data-sev="low"
+ data-rule="NHI-AZ-008" data-resource="azure:contoso-tenant:app/44444444-4444-4444-4444-444444444444">
+<h3>FIC 数が上限 20 に接近している</h3>
+<div class="tags"><span class="tag sev low">Low</span><span class="tag">NHI-AZ-008</span><span class="tag">OWASP NHI6</span><span class="tag">AZURE</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">graph-admin-app</code>
+ <span style="opacity:.7">(azure.app_registration)</span></div>
+<dl><dt>検出内容</dt><dd><span class="mask">graph-admin-app</span> のフェデレーション ID 資格情報が上限 20 に接近している。</dd><dt>あるべき状態</dt><dd>上限に達する前にアプリを分割する。上限回避のために subject を緩めてはならない。</dd><dt>対処</dt><dd>利用単位でアプリ登録を分割する。flexible FIC はプレビューのため本番前提にしない。</dd><dt>確認方法</dt><dd>federatedIdentityCredentials の件数が上限に対して余裕があること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f info" data-id="NHI-X-001-0029" data-sev="info"
+ data-rule="NHI-X-001" data-resource="gap:aws:111122223333:organizations">
+<h3>証跡が取得できていない領域がある</h3>
+<div class="tags"><span class="tag sev info">Info</span><span class="tag">NHI-X-001</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">aws:111122223333:organizations</code>
+ <span style="opacity:.7">(coverageGaps)</span></div>
+<dl><dt>検出内容</dt><dd><span class="mask">aws:111122223333:organizations</span> の証跡を取得できなかった(理由: permission_denied)。</dd><dt>あるべき状態</dt><dd>評価対象の全領域について証跡が取得できている。</dd><dt>対処</dt><dd>必要な読み取り権限を付与して再収集する。取得できない領域は「問題なし」ではなく未評価として扱う。</dd><dt>確認方法</dt><dd>再収集で coverageGaps が空になること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f info" data-id="NHI-X-001-0031" data-sev="info"
+ data-rule="NHI-X-001" data-resource="gap:aws:111122223333:us-east-1:ec2-instances">
+<h3>証跡が取得できていない領域がある</h3>
+<div class="tags"><span class="tag sev info">Info</span><span class="tag">NHI-X-001</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">aws:111122223333:us-east-1:ec2-instances</code>
+ <span style="opacity:.7">(coverageGaps)</span></div>
+<dl><dt>検出内容</dt><dd><span class="mask">aws:111122223333:us-east-1:ec2-instances</span> の証跡を取得できなかった(理由: not_collected)。</dd><dt>あるべき状態</dt><dd>評価対象の全領域について証跡が取得できている。</dd><dt>対処</dt><dd>必要な読み取り権限を付与して再収集する。取得できない領域は「問題なし」ではなく未評価として扱う。</dd><dt>確認方法</dt><dd>再収集で coverageGaps が空になること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div><div class="f info" data-id="NHI-X-001-0030" data-sev="info"
+ data-rule="NHI-X-001" data-resource="gap:aws:scope">
+<h3>証跡が取得できていない領域がある</h3>
+<div class="tags"><span class="tag sev info">Info</span><span class="tag">NHI-X-001</span></div>
+<div style="font-size:.85rem;color:var(--muted)">対象: <code class="mask">aws:scope</code>
+ <span style="opacity:.7">(coverageGaps)</span></div>
+<dl><dt>検出内容</dt><dd><span class="mask">aws:scope</span> の証跡を取得できなかった(理由: scope_limited)。</dd><dt>あるべき状態</dt><dd>評価対象の全領域について証跡が取得できている。</dd><dt>対処</dt><dd>必要な読み取り権限を付与して再収集する。取得できない領域は「問題なし」ではなく未評価として扱う。</dd><dt>確認方法</dt><dd>再収集で coverageGaps が空になること。</dd></dl>
+<div class="ctl"><label>ステータス <select><option value="open">未対応</option><option value="triage">トリアージ中</option><option value="wip">対応中</option><option value="accepted">リスク受容</option><option value="done">対応済み</option><option value="na">対象外</option></select></label></div>
+<textarea placeholder="コメント / 判断理由 / 対応期限"></textarea>
+</div>
+<footer>入力内容はこのブラウザの localStorage にのみ保存されます。共有前に「公開用マスク」で
+リソース名を伏せてください。<strong>マスクは 4 文字以上の識別子(リソース名・アカウント ID・
+リソースキー)を対象とします。短い名称や本文中の固有名詞は伏せられない場合があるため、
+外部共有前に目視で確認してください。</strong>判定は収集時点の証跡に基づきます。</footer>
+</div><script>
+const KEY='nhi-posture-'+document.body.dataset.reportId;
+const known=new Set([...document.querySelectorAll('.f')].map(e=>e.dataset.id));
+const sanitize=o=>{const out=Object.create(null);
+  for(const k of Object.keys(o||{})){if(known.has(k))out[k]=o[k];}return out;};
+const load=()=>{try{return sanitize(JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){return Object.create(null)}};
+let state=load();
+const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
+document.querySelectorAll('.f').forEach(el=>{
+  const id=el.dataset.id, s=state[id]||{};
+  const sel=el.querySelector('select'), ta=el.querySelector('textarea');
+  if(s.status)sel.value=s.status;
+  if(s.comment)ta.value=s.comment;
+  sel.addEventListener('change',()=>{state[id]={...(state[id]||{}),status:sel.value};save();applyFilter()});
+  ta.addEventListener('input',()=>{state[id]={...(state[id]||{}),comment:ta.value};save()});
+});
+const filters={sev:new Set(),hideDone:false};
+document.querySelectorAll('.pill[data-sev]').forEach(p=>p.addEventListener('click',()=>{
+  const v=p.dataset.sev;
+  filters.sev.has(v)?filters.sev.delete(v):filters.sev.add(v);
+  p.classList.toggle('on');applyFilter();
+}));
+function applyFilter(){
+  document.querySelectorAll('.f').forEach(el=>{
+    const st=(state[el.dataset.id]||{}).status||'open';
+    let show=filters.sev.size===0||filters.sev.has(el.dataset.sev);
+    if(filters.hideDone&&(st==='done'||st==='accepted'||st==='na'))show=false;
+    el.style.display=show?'':'none';
+  });
+  const n=[...document.querySelectorAll('.f')].filter(e=>e.style.display!=='none').length;
+  document.getElementById('shown').textContent=n;
+}
+document.getElementById('hideDone').addEventListener('change',e=>{
+  filters.hideDone=e.target.checked;applyFilter();});
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const rows=[...document.querySelectorAll('.f')].map(el=>({
+    id:el.dataset.id,ruleId:el.dataset.rule,severity:el.dataset.sev,
+    resource:el.dataset.resource,
+    status:(state[el.dataset.id]||{}).status||'open',
+    comment:(state[el.dataset.id]||{}).comment||''}));
+  const ta=document.getElementById('io');ta.value=JSON.stringify(rows,null,2);
+  ta.scrollIntoView({behavior:'smooth'});
+});
+document.getElementById('importBtn').addEventListener('click',()=>{
+  try{
+    const rows=JSON.parse(document.getElementById('io').value);
+    if(!Array.isArray(rows))throw new Error('配列ではありません');
+    let applied=0,skipped=0;
+    rows.forEach(r=>{
+      if(r&&typeof r.id==='string'&&known.has(r.id)){
+        state[r.id]={status:String(r.status||''),comment:String(r.comment||'')};applied++;
+      }else{skipped++;}
+    });
+    save();
+    if(skipped)alert(applied+' 件を反映しました。'+skipped+' 件はこのレポートに存在しない ID のため無視しました。');
+    location.reload();
+  }catch(e){alert('JSON を解釈できません: '+e.message)}
+});
+document.getElementById('maskBtn').addEventListener('click',()=>
+  document.body.classList.toggle('masked'));
+applyFilter();
+</script></body></html>

@@ -1,0 +1,21 @@
+{
+  "shared-role": [
+    "i-0a1",
+    "i-0a2",
+    "i-0a3",
+    "i-0a4"
+  ],
+  "github-deploy": [
+    "gha"
+  ],
+  "stale-role": [],
+  "vendor-access": [],
+  "wide-open-oidc": [],
+  "cognito-pool-role": [],
+  "quarantined-role": [
+    "i-0b1"
+  ],
+  "AWSServiceRoleForAutoScaling": [],
+  "sibling-access": [],
+  "org-fenced-access": []
+}

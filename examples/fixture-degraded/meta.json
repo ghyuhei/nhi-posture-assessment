@@ -1,0 +1,3 @@
+{"collectedAt":"2026-08-25T00:00:00+00:00","cloud":"both",
+ "coverageGaps":[{"area":"aws:999999999999:iam-users","reason":"permission_denied",
+                  "detail":"iam:ListUsers が拒否された"}]}

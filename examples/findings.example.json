@@ -1,0 +1,889 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-08-24T23:41:39+00:00",
+  "dbGeneratedAt": "2026-08-25T00:00:00+00:00",
+  "packs": [
+    {
+      "name": "nhi-core",
+      "version": "1.0.0"
+    }
+  ],
+  "scopes": [
+    {
+      "cloud": "aws",
+      "id": "111122223333",
+      "type": "aws.account"
+    },
+    {
+      "cloud": "azure",
+      "id": "contoso-tenant",
+      "type": "azure.tenant"
+    }
+  ],
+  "coverageGaps": [
+    {
+      "area": "aws:111122223333:organizations",
+      "reason": "permission_denied",
+      "detail": "メンバーアカウントからは組織ポリシーを列挙できない",
+      "key": "gap:aws:111122223333:organizations"
+    },
+    {
+      "area": "aws:scope",
+      "reason": "scope_limited",
+      "detail": "収集対象リージョン: ap-northeast-1, us-east-1。これ以外のリージョンは未評価。",
+      "key": "gap:aws:scope"
+    },
+    {
+      "area": "aws:111122223333:us-east-1:ec2-instances",
+      "reason": "not_collected",
+      "detail": "リージョン us-east-1 のインスタンスを取得できていない",
+      "key": "gap:aws:111122223333:us-east-1:ec2-instances"
+    }
+  ],
+  "summary": {
+    "info": 3,
+    "low": 1,
+    "medium": 10,
+    "high": 13,
+    "critical": 6,
+    "total": 33
+  },
+  "suppressed": [],
+  "baseline": null,
+  "resolved": [],
+  "owaspSummary": {
+    "NHI1": {
+      "count": 7,
+      "worst": "high",
+      "rules": [
+        "NHI-AZ-003",
+        "NHI-AWS-003",
+        "NHI-AWS-007",
+        "NHI-AWS-012",
+        "NHI-AZ-004",
+        "NHI-X-002"
+      ]
+    },
+    "NHI2": {
+      "count": 2,
+      "worst": "critical",
+      "rules": [
+        "NHI-AWS-009",
+        "NHI-AWS-013"
+      ]
+    },
+    "NHI3": {
+      "count": 4,
+      "worst": "critical",
+      "rules": [
+        "NHI-AWS-005B",
+        "NHI-AZ-005",
+        "NHI-AWS-006",
+        "NHI-AZ-010"
+      ]
+    },
+    "NHI4": {
+      "count": 8,
+      "worst": "critical",
+      "rules": [
+        "NHI-AWS-009",
+        "NHI-AWS-001",
+        "NHI-AWS-010",
+        "NHI-AZ-001",
+        "NHI-AZ-012",
+        "NHI-AWS-009B"
+      ]
+    },
+    "NHI5": {
+      "count": 4,
+      "worst": "critical",
+      "rules": [
+        "NHI-AWS-004",
+        "NHI-AZ-005",
+        "NHI-AZ-010",
+        "NHI-AWS-012"
+      ]
+    },
+    "NHI6": {
+      "count": 3,
+      "worst": "critical",
+      "rules": [
+        "NHI-AWS-005",
+        "NHI-AWS-005B",
+        "NHI-AZ-008"
+      ]
+    },
+    "NHI7": {
+      "count": 9,
+      "worst": "critical",
+      "rules": [
+        "NHI-AWS-004",
+        "NHI-AWS-001",
+        "NHI-AWS-002",
+        "NHI-AZ-001",
+        "NHI-AZ-002",
+        "NHI-AZ-009",
+        "NHI-AZ-012"
+      ]
+    },
+    "NHI8": {
+      "count": 2,
+      "worst": "critical",
+      "rules": [
+        "NHI-AWS-005",
+        "NHI-AZ-006"
+      ]
+    },
+    "NHI9": {
+      "count": 3,
+      "worst": "high",
+      "rules": [
+        "NHI-AWS-014",
+        "NHI-AWS-008",
+        "NHI-AZ-007"
+      ]
+    },
+    "NHI10": {
+      "count": 1,
+      "worst": "high",
+      "rules": [
+        "NHI-AWS-014"
+      ]
+    }
+  },
+  "findings": [
+    {
+      "id": "NHI-AWS-004-0006",
+      "ruleId": "NHI-AWS-004",
+      "title": "管理者相当の権限を持つ IAM ユーザーが長期キーを保持している",
+      "severity": "critical",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI5",
+        "NHI7"
+      ],
+      "docRef": "F-02",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:user/legacy-batch",
+      "resourceName": "legacy-batch",
+      "resourceType": "aws.iam_user",
+      "message": "IAM ユーザー legacy-batch が管理者相当の権限と有効な長期キーを同時に持つ。",
+      "expected": "管理者相当の権限は人間の一時セッションにのみ紐づく。",
+      "remediation": "最優先で無効化する。恒久対応として権限を実使用実績から再生成し、アクセスをロール経由に移す。",
+      "validation": "当該ユーザーに AdministratorAccess 相当が付与されておらず、Active キーが存在しないこと。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-005-0007",
+      "ruleId": "NHI-AWS-005",
+      "title": "OIDC 信頼ポリシーの sub がワイルドカードを許している",
+      "severity": "critical",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI6",
+        "NHI8"
+      ],
+      "docRef": "F-09",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:role/github-deploy",
+      "resourceName": "github-deploy",
+      "resourceType": "aws.iam_role",
+      "message": "ロール github-deploy の信頼ポリシーが sub のワイルドカードを許容している。",
+      "expected": "sub は完全一致で固定し、可能なら provider 固有クレーム(GitHub の repository_id 等の不変値)で縛る。",
+      "remediation": "信頼ポリシーの StringLike を StringEquals に変更し、リポジトリ名ではなくリポジトリ ID を使う。",
+      "validation": "aws iam get-role の AssumeRolePolicyDocument に sub のワイルドカードが存在しないこと。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-005B-0008",
+      "ruleId": "NHI-AWS-005B",
+      "title": "フェデレーション信頼に条件が一切設定されていない",
+      "severity": "critical",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI6",
+        "NHI3"
+      ],
+      "docRef": "F-09",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:role/wide-open-oidc",
+      "resourceName": "wide-open-oidc",
+      "resourceType": "aws.iam_role",
+      "message": "ロール wide-open-oidc のフェデレーション信頼に Condition が無く、当該 IdP がトークンを発行できる全ワークロードが引き受けられる。",
+      "expected": "aud と sub を最低限固定し、可能なら provider 固有クレームの不変値で縛る。",
+      "remediation": "信頼ポリシーに StringEquals による aud / sub 条件を追加する。",
+      "validation": "信頼ポリシーの各 Allow ステートメントに Condition が存在すること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-009-0012",
+      "ruleId": "NHI-AWS-009",
+      "title": "EC2 インスタンスが IMDSv1 を許容している",
+      "severity": "critical",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI4",
+        "NHI2"
+      ],
+      "docRef": "F-04",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:instance/i-0a1",
+      "resourceName": "i-0a1",
+      "resourceType": "aws.ec2_instance",
+      "message": "インスタンス i-0a1 が IMDSv1 を許容し、かつ IAM ロールがアタッチされている。SSRF 一発で一時認証情報を奪取されうる。",
+      "expected": "全インスタンスで HttpTokens=required(IMDSv2 必須)。",
+      "remediation": "aws ec2 modify-instance-metadata-options --http-tokens required --http-endpoint enabled を適用し、アカウント既定も全リージョンで設定する。",
+      "validation": "MetadataNoTokenRejected メトリクスが 0 に収束し、HttpTokens=optional のインスタンスが存在しないこと。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-013-0017",
+      "ruleId": "NHI-AWS-013",
+      "title": "漏洩キーの隔離ポリシーが適用されている(進行中インシデント)",
+      "severity": "critical",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI2"
+      ],
+      "docRef": "F-10",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:role/quarantined-role",
+      "resourceName": "quarantined-role",
+      "resourceType": "aws.iam_role",
+      "message": "quarantined-role に AWSCompromisedKeyQuarantine 系ポリシーが適用されている。AWS が資格情報の露出を検知した状態。",
+      "expected": "隔離ポリシーが適用された NHI は存在しない。",
+      "remediation": "隔離はキーを無効化しない点に注意。直ちにキーを無効化し、CloudTrail で悪用の有無を確認し、AWS のサポートケースの指示に従う。",
+      "validation": "隔離ポリシーがデタッチされ、当該キーが削除されていること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AZ-005-0022",
+      "ruleId": "NHI-AZ-005",
+      "title": "高権限の Graph アプリケーション権限が付与されている",
+      "severity": "critical",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI5",
+        "NHI3"
+      ],
+      "docRef": "CAP-CONSENT",
+      "cloud": "azure",
+      "scopeId": "contoso-tenant",
+      "resourceKey": "azure:contoso-tenant:app/44444444-4444-4444-4444-444444444444",
+      "resourceName": "graph-admin-app",
+      "resourceType": "azure.app_registration",
+      "message": "graph-admin-app にテナント乗っ取りに直結する Graph アプリケーション権限が付与されている。",
+      "expected": "これらの権限は付与しない。必要な場合は対象を限定した権限へ置き換える。",
+      "remediation": "アプリロール割り当てを削除し、必要最小の権限へ置き換える。ユーザー同意を制限し管理者同意ワークフローを有効化する。",
+      "validation": "appRoleAssignments に当該権限が存在しないこと。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-001-0001",
+      "ruleId": "NHI-AWS-001",
+      "title": "IAM ユーザーが有効な長期アクセスキーを保持している",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI7",
+        "NHI4"
+      ],
+      "docRef": "F-02",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:user/legacy-batch",
+      "resourceName": "legacy-batch",
+      "resourceType": "aws.iam_user",
+      "message": "IAM ユーザー legacy-batch が有効な長期アクセスキーを保持している。",
+      "expected": "ワークロードは IAM ロール、CI/CD は OIDC フェデレーションを使い、IAM ユーザーのアクセスキーは存在しない。",
+      "remediation": "利用元をロール/OIDC へ移行し、キーを無効化してから削除する。再発防止に SCP で iam:CreateAccessKey を Deny する。",
+      "validation": "aws iam list-access-keys --user-name <name> が Active なキーを返さないこと。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-001-0002",
+      "ruleId": "NHI-AWS-001",
+      "title": "IAM ユーザーが有効な長期アクセスキーを保持している",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI7",
+        "NHI4"
+      ],
+      "docRef": "F-02",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:user/rotated-user",
+      "resourceName": "rotated-user",
+      "resourceType": "aws.iam_user",
+      "message": "IAM ユーザー rotated-user が有効な長期アクセスキーを保持している。",
+      "expected": "ワークロードは IAM ロール、CI/CD は OIDC フェデレーションを使い、IAM ユーザーのアクセスキーは存在しない。",
+      "remediation": "利用元をロール/OIDC へ移行し、キーを無効化してから削除する。再発防止に SCP で iam:CreateAccessKey を Deny する。",
+      "validation": "aws iam list-access-keys --user-name <name> が Active なキーを返さないこと。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-001-0003",
+      "ruleId": "NHI-AWS-001",
+      "title": "IAM ユーザーが有効な長期アクセスキーを保持している",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI7",
+        "NHI4"
+      ],
+      "docRef": "F-02",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:user/shared-ops-account",
+      "resourceName": "shared-ops-account",
+      "resourceType": "aws.iam_user",
+      "message": "IAM ユーザー shared-ops-account が有効な長期アクセスキーを保持している。",
+      "expected": "ワークロードは IAM ロール、CI/CD は OIDC フェデレーションを使い、IAM ユーザーのアクセスキーは存在しない。",
+      "remediation": "利用元をロール/OIDC へ移行し、キーを無効化してから削除する。再発防止に SCP で iam:CreateAccessKey を Deny する。",
+      "validation": "aws iam list-access-keys --user-name <name> が Active なキーを返さないこと。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-002-0004",
+      "ruleId": "NHI-AWS-002",
+      "title": "アクセスキーが許容年齢を超過している",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI7"
+      ],
+      "docRef": "F-02",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:user/legacy-batch",
+      "resourceName": "legacy-batch",
+      "resourceType": "aws.iam_user",
+      "message": "IAM ユーザー legacy-batch のアクセスキーが 967 日経過している。",
+      "expected": "IAM アクセスキーには有効期限の概念が無いため、そもそも保持しない。",
+      "remediation": "ロール/OIDC へ移行して削除する。移行が完了するまでの暫定策としてのみローテーションを行う。",
+      "validation": "認証情報レポートの access_key_1_last_rotated が閾値内、または当該ユーザーが存在しないこと。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-006-0009",
+      "ruleId": "NHI-AWS-006",
+      "title": "外部アカウントを ExternalId 無しで信頼している",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI3"
+      ],
+      "docRef": "CAP-THIRDPARTY",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:role/vendor-access",
+      "resourceName": "vendor-access",
+      "resourceType": "aws.iam_role",
+      "message": "ロール vendor-access が組織外プリンシパルを sts:ExternalId 条件なしで信頼している。",
+      "expected": "サードパーティ向けロールは sts:ExternalId を必須にし、混乱した代理human問題を防ぐ。",
+      "remediation": "信頼ポリシーに sts:ExternalId 条件を追加し、値をサードパーティと共有せずテナント固有にする。",
+      "validation": "信頼ポリシーの Condition に sts:ExternalId が存在すること。",
+      "caveat": "同一 AWS Organizations 内のアカウントは第三者ではないため除外している。組織を列挙できなかった場合は除外できず、確度が low に落ちる。"
+    },
+    {
+      "id": "NHI-AWS-010-0014",
+      "ruleId": "NHI-AWS-010",
+      "title": "アカウント既定の IMDSv2 強制が未設定",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI4"
+      ],
+      "docRef": "F-04",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:ap-northeast-1",
+      "resourceName": "111122223333/ap-northeast-1",
+      "resourceType": "aws.account_region",
+      "message": "アカウント 111122223333 のリージョン ap-northeast-1 で IMDSv2 のアカウント既定が未設定。",
+      "expected": "利用する全リージョンでアカウント既定を required にする(既存インスタンスには遡及しない点に注意)。",
+      "remediation": "aws ec2 modify-instance-metadata-defaults --http-tokens required をリージョンごとに実行し、SCP で ec2:MetadataHttpTokens を強制する。",
+      "validation": "aws ec2 get-instance-metadata-defaults が required を返すこと。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-014-0016",
+      "ruleId": "NHI-AWS-014",
+      "title": "同一 IAM ユーザーが人間のコンソール利用と自動化用キーを兼ねている",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI10",
+        "NHI9"
+      ],
+      "docRef": "F-01",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:user/shared-ops-account",
+      "resourceName": "shared-ops-account",
+      "resourceType": "aws.iam_user",
+      "message": "IAM ユーザー shared-ops-account はコンソールログイン実績と有効なアクセスキーの両方を持ち、人間の操作と自動処理が同一 ID に混在している。",
+      "expected": "人間は IAM Identity Center 等の一時セッション、自動処理はロール。両者が同一 ID を共有しない。",
+      "remediation": "自動処理をロールへ移し、当該ユーザーからアクセスキーを削除する。人間のアクセスはフェデレーションに移行する。",
+      "validation": "コンソール実績のあるプリンシパルに有効なアクセスキーが存在しないこと。",
+      "caveat": "監査証跡上、この ID の操作は人間か自動処理かを区別できない。インシデント時の説明責任が成立しない状態である。"
+    },
+    {
+      "id": "NHI-AZ-001-0018",
+      "ruleId": "NHI-AZ-001",
+      "title": "アプリ登録がクライアントシークレット(パスワード資格情報)を保持している",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI4",
+        "NHI7"
+      ],
+      "docRef": "F-02",
+      "cloud": "azure",
+      "scopeId": "contoso-tenant",
+      "resourceKey": "azure:contoso-tenant:app/11111111-1111-1111-1111-111111111111",
+      "resourceName": "legacy-batch-app",
+      "resourceType": "azure.app_registration",
+      "message": "アプリ登録 legacy-batch-app がクライアントシークレットを保持している。",
+      "expected": "証明書資格情報またはフェデレーション ID 資格情報(FIC)を使い、共有シークレットを保持しない。",
+      "remediation": "FIC または証明書へ移行し、シークレットを削除する。テナント既定の application management policy で再作成を禁止する。",
+      "validation": "アプリの passwordCredentials が空であること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AZ-002-0019",
+      "ruleId": "NHI-AZ-002",
+      "title": "資格情報の有効期間が長すぎる、または無期限",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI7"
+      ],
+      "docRef": "F-02",
+      "cloud": "azure",
+      "scopeId": "contoso-tenant",
+      "resourceKey": "azure:contoso-tenant:app/11111111-1111-1111-1111-111111111111",
+      "resourceName": "legacy-batch-app",
+      "resourceType": "azure.app_registration",
+      "message": "legacy-batch-app の資格情報の有効期間が許容値を超えている、または無期限。",
+      "expected": "application management policy の maxLifetime でテナント全体に上限を強制する。",
+      "remediation": "既存資格情報を短寿命で再発行し、テナント既定ポリシーで maxLifetime を設定する。",
+      "validation": "全資格情報の endDateTime が発行日から閾値以内であること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AZ-003-0020",
+      "ruleId": "NHI-AZ-003",
+      "title": "アプリ登録に所有者が設定されていない",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI1"
+      ],
+      "docRef": "F-01",
+      "cloud": "azure",
+      "scopeId": "contoso-tenant",
+      "resourceKey": "azure:contoso-tenant:app/11111111-1111-1111-1111-111111111111",
+      "resourceName": "legacy-batch-app",
+      "resourceType": "azure.app_registration",
+      "message": "legacy-batch-app に所有者が設定されておらず、廃止判断ができない。",
+      "expected": "全 NHI に有効な所有者(在職者)が紐づき、四半期アクセスレビューの承認者になれる。",
+      "remediation": "所有者を設定する。特定できない場合は凍結(accountEnabled=false)し、一定期間後に削除する。",
+      "validation": "owners が 1 件以上で、いずれも有効なユーザーであること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AZ-009-0026",
+      "ruleId": "NHI-AZ-009",
+      "title": "テナント既定の application management policy が未設定",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI7"
+      ],
+      "docRef": "F-02",
+      "cloud": "azure",
+      "scopeId": "contoso-tenant",
+      "resourceKey": "azure:contoso-tenant",
+      "resourceName": "contoso-tenant",
+      "resourceType": "azure.tenant",
+      "message": "テナント contoso-tenant でクライアントシークレット作成を禁止/制限する既定ポリシーが未設定。",
+      "expected": "defaultAppManagementPolicy で passwordAddition を禁止し、maxLifetime を強制する。",
+      "remediation": "restrictForAppsCreatedAfterDateTime を移行スイッチとして段階適用する(既存アプリには遡及しない)。",
+      "validation": "指定日以降に作成したアプリでシークレット追加が失敗すること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AZ-010-0027",
+      "ruleId": "NHI-AZ-010",
+      "title": "ユーザー同意が制限されていない",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI3",
+        "NHI5"
+      ],
+      "docRef": "CAP-CONSENT",
+      "cloud": "azure",
+      "scopeId": "contoso-tenant",
+      "resourceKey": "azure:contoso-tenant",
+      "resourceName": "contoso-tenant",
+      "resourceType": "azure.tenant",
+      "message": "テナント contoso-tenant でユーザーによるアプリ同意が制限されていない(不正同意付与の経路)。",
+      "expected": "ユーザー同意を禁止または検証済み発行元の低リスク権限に限定し、管理者同意ワークフローを有効化する。",
+      "remediation": "authorizationPolicy の permissionGrantPoliciesAssigned を絞り、管理者同意ワークフローを有効化する。",
+      "validation": "一般ユーザーが新規アプリへ同意できず、要求が承認フローに入ること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AZ-012-0028",
+      "ruleId": "NHI-AZ-012",
+      "title": "ストレージアカウントが共有キー認証を許可している",
+      "severity": "high",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI4",
+        "NHI7"
+      ],
+      "docRef": "CAP-PREVENT",
+      "cloud": "azure",
+      "scopeId": "contoso-tenant",
+      "resourceKey": "azure:contoso-tenant:storage/stlegacy001",
+      "resourceName": "stlegacy001",
+      "resourceType": "azure.storage_account",
+      "message": "ストレージアカウント stlegacy001 が共有キー認証を許可している。",
+      "expected": "allowSharedKeyAccess=false で Entra 認証のみにする。",
+      "remediation": "利用側を Entra 認証へ移行後に無効化し、Azure Policy の deny で再発を防ぐ。",
+      "validation": "allowSharedKeyAccess が false であること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-003-0005",
+      "ruleId": "NHI-AWS-003",
+      "title": "アクセスキーが長期間未使用のまま有効になっている",
+      "severity": "medium",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI1"
+      ],
+      "docRef": "F-01",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:user/legacy-batch",
+      "resourceName": "legacy-batch",
+      "resourceType": "aws.iam_user",
+      "message": "IAM ユーザー legacy-batch の有効なアクセスキーが長期間未使用。",
+      "expected": "未使用の資格情報は無効化・削除されている。",
+      "remediation": "所有者に確認のうえ無効化し、一定期間後に削除する(凍結→苦情が無ければ削除)。",
+      "validation": "認証情報レポートで当該キーが Inactive または不存在であること。",
+      "caveat": "既定の追跡期間は 180 日。四半期バッチ・年次ジョブ・災対切替でしか動かない NHI がある環境では identityUnusedDays を 365 に上げること。窓が短いと「未使用」と誤判定して稼働中の処理を壊す。"
+    },
+    {
+      "id": "NHI-AWS-007-0010",
+      "ruleId": "NHI-AWS-007",
+      "title": "IAM ロールが長期間未使用",
+      "severity": "medium",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI1"
+      ],
+      "docRef": "F-01",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:role/stale-role",
+      "resourceName": "stale-role",
+      "resourceType": "aws.iam_role",
+      "message": "ロール stale-role が 601 日間未使用。",
+      "expected": "未使用ロールは削除されている。判定は業務周期(四半期/年次バッチ)を踏まえた追跡期間で行う。",
+      "remediation": "所有者を特定し、凍結(信頼ポリシーを空にする)→ 苦情が無ければ削除。",
+      "validation": "aws iam get-role の RoleLastUsed が閾値内、または当該ロールが不存在であること。",
+      "caveat": "既定の追跡期間は 180 日。四半期バッチ・年次ジョブ・災対切替でしか動かない NHI がある環境では identityUnusedDays を 365 に上げること。窓が短いと「未使用」と誤判定して稼働中の処理を壊す。"
+    },
+    {
+      "id": "NHI-AWS-008-0011",
+      "ruleId": "NHI-AWS-008",
+      "title": "同一ロールを多数のワークロードが共有している",
+      "severity": "medium",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI9"
+      ],
+      "docRef": "F-03",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:role/shared-role",
+      "resourceName": "shared-role",
+      "resourceType": "aws.iam_role",
+      "message": "ロール shared-role を複数のワークロードが共有している(影響範囲が拡大する)。",
+      "expected": "NHI はワークロード単位に分離し、侵害時の影響範囲を限定する。",
+      "remediation": "ワークロードごとにロールを分割する。ネイティブに検出機構が無いため、IaC の静的検査で再発防止する。",
+      "validation": "1 ロールにつきアタッチ先が 1 ワークロードであること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-009B-0013",
+      "ruleId": "NHI-AWS-009B",
+      "title": "EC2 インスタンスが IMDSv1 を許容している(ロール未アタッチ)",
+      "severity": "medium",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI4"
+      ],
+      "docRef": "F-04",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333:instance/i-0a3",
+      "resourceName": "i-0a3",
+      "resourceType": "aws.ec2_instance",
+      "message": "インスタンス i-0a3 が IMDSv1 を許容している。現時点ではロール未アタッチのため資格情報の露出は無いが、ロール付与時に即座に Critical 化する。",
+      "expected": "全インスタンスで HttpTokens=required。",
+      "remediation": "modify-instance-metadata-options で required にする。ロール付与前に必ず閉じる。",
+      "validation": "HttpTokens=optional のインスタンスが存在しないこと。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AWS-012-0015",
+      "ruleId": "NHI-AWS-012",
+      "title": "unused access アナライザーが有効化されていない",
+      "severity": "medium",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI5",
+        "NHI1"
+      ],
+      "docRef": "CAP-RIGHTSIZE",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333",
+      "resourceName": "111122223333",
+      "resourceType": "aws.account",
+      "message": "アカウント 111122223333 で IAM Access Analyzer の unused access 分析が有効化されていない。",
+      "expected": "組織レベルで有効化し、追跡期間を業務周期に合わせる(1〜365日で設定可)。",
+      "remediation": "委任管理者を設定し組織アナライザーを作成する。四半期・年次バッチがあるなら追跡期間を 365 日にする。",
+      "validation": "aws accessanalyzer list-analyzers --type ORGANIZATION_UNUSED_ACCESS が結果を返すこと。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AZ-004-0021",
+      "ruleId": "NHI-AZ-004",
+      "title": "サービスプリンシパルが長期間サインインしていない",
+      "severity": "medium",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI1"
+      ],
+      "docRef": "F-08",
+      "cloud": "azure",
+      "scopeId": "contoso-tenant",
+      "resourceKey": "azure:contoso-tenant:app/11111111-1111-1111-1111-111111111111",
+      "resourceName": "legacy-batch-app",
+      "resourceType": "azure.app_registration",
+      "message": "legacy-batch-app が 236 日間サインインしていない。",
+      "expected": "未使用 NHI は無効化・削除されている。",
+      "remediation": "所有者に確認のうえ accountEnabled=false で凍結し、苦情が無ければ削除する。",
+      "validation": "サインインログに当該 SP の記録が無く、オブジェクトが削除されていること。",
+      "caveat": "Entra のサインインログ保持は Free 7 日 / P1・P2 30 日。長期退避が無い環境ではこの判定を信頼してはならない。 既定の追跡期間は 180 日。四半期バッチ・年次ジョブ・災対切替でしか動かない NHI がある環境では identityUnusedDays を 365 に上げること。窓が短いと「未使用」と誤判定して稼働中の処理を壊す。"
+    },
+    {
+      "id": "NHI-AZ-006-0023",
+      "ruleId": "NHI-AZ-006",
+      "title": "マルチテナントのアプリ登録が環境分離を破っている",
+      "severity": "medium",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI8"
+      ],
+      "docRef": "CAP-ISOLATION",
+      "cloud": "azure",
+      "scopeId": "contoso-tenant",
+      "resourceKey": "azure:contoso-tenant:app/33333333-3333-3333-3333-333333333333",
+      "resourceName": "multi-tenant-app",
+      "resourceType": "azure.app_registration",
+      "message": "アプリ登録 multi-tenant-app がマルチテナント構成で、テナント境界を跨いで利用されうる。",
+      "expected": "内部用途のアプリは AzureADMyOrg(単一テナント)。",
+      "remediation": "signInAudience を AzureADMyOrg に変更する。外部提供が要件なら App Instance Property Lock を有効化する。",
+      "validation": "signInAudience が AzureADMyOrg であること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-AZ-007-0024",
+      "ruleId": "NHI-AZ-007",
+      "title": "ユーザー割り当てマネージド ID を多数のリソースが共有している",
+      "severity": "medium",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI9"
+      ],
+      "docRef": "F-03",
+      "cloud": "azure",
+      "scopeId": "contoso-tenant",
+      "resourceKey": "azure:contoso-tenant:mi/shared-mi",
+      "resourceName": "shared-mi",
+      "resourceType": "azure.managed_identity",
+      "message": "マネージド ID shared-mi を複数のリソースが共有している。",
+      "expected": "ワークロード単位に分離する。共有が必要な場合も権限は最小公倍数ではなく最小限にする。",
+      "remediation": "リソースごとにシステム割り当て ID かユーザー割り当て ID を分ける。",
+      "validation": "1 マネージド ID につきアタッチ先が 1 リソースであること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-X-002-0032",
+      "ruleId": "NHI-X-002",
+      "title": "NHI の所有者を特定できる割合が低い",
+      "severity": "medium",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI1"
+      ],
+      "docRef": "F-01",
+      "cloud": "aws",
+      "scopeId": "111122223333",
+      "resourceKey": "aws:111122223333",
+      "resourceName": "111122223333",
+      "resourceType": "aws.account",
+      "message": "111122223333: 所有者を特定できない NHI が 9 件 / 全 13 件(特定率 0.308)。",
+      "expected": "全 NHI に在職者の所有者が紐づき、四半期アクセスレビューの承認者になれる。",
+      "remediation": "AWS は Owner タグの付与を SCP/Config で強制し、Azure はアプリ登録の owners を必須にする。特定できないものは凍結し、一定期間後に削除する。",
+      "validation": "所有者特定率が目標値以上であること。凍結後の復活要請件数を誤検知率の代理指標として記録する。",
+      "caveat": "AWS には所有者の概念が無くタグ運用に依存するため、タグが付いていても実在性(在職者か)は別途確認が必要。これが F-01 の本質であり、ネイティブでは埋まらない。"
+    },
+    {
+      "id": "NHI-X-002-0033",
+      "ruleId": "NHI-X-002",
+      "title": "NHI の所有者を特定できる割合が低い",
+      "severity": "medium",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI1"
+      ],
+      "docRef": "F-01",
+      "cloud": "azure",
+      "scopeId": "contoso-tenant",
+      "resourceKey": "azure:contoso-tenant",
+      "resourceName": "contoso-tenant",
+      "resourceType": "azure.tenant",
+      "message": "contoso-tenant: 所有者を特定できない NHI が 3 件 / 全 6 件(特定率 0.5)。",
+      "expected": "全 NHI に在職者の所有者が紐づき、四半期アクセスレビューの承認者になれる。",
+      "remediation": "AWS は Owner タグの付与を SCP/Config で強制し、Azure はアプリ登録の owners を必須にする。特定できないものは凍結し、一定期間後に削除する。",
+      "validation": "所有者特定率が目標値以上であること。凍結後の復活要請件数を誤検知率の代理指標として記録する。",
+      "caveat": "AWS には所有者の概念が無くタグ運用に依存するため、タグが付いていても実在性(在職者か)は別途確認が必要。これが F-01 の本質であり、ネイティブでは埋まらない。"
+    },
+    {
+      "id": "NHI-AZ-008-0025",
+      "ruleId": "NHI-AZ-008",
+      "title": "FIC 数が上限 20 に接近している",
+      "severity": "low",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [
+        "NHI6"
+      ],
+      "docRef": "CAP-FEDERATION",
+      "cloud": "azure",
+      "scopeId": "contoso-tenant",
+      "resourceKey": "azure:contoso-tenant:app/44444444-4444-4444-4444-444444444444",
+      "resourceName": "graph-admin-app",
+      "resourceType": "azure.app_registration",
+      "message": "graph-admin-app のフェデレーション ID 資格情報が上限 20 に接近している。",
+      "expected": "上限に達する前にアプリを分割する。上限回避のために subject を緩めてはならない。",
+      "remediation": "利用単位でアプリ登録を分割する。flexible FIC はプレビューのため本番前提にしない。",
+      "validation": "federatedIdentityCredentials の件数が上限に対して余裕があること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-X-001-0029",
+      "ruleId": "NHI-X-001",
+      "title": "証跡が取得できていない領域がある",
+      "severity": "info",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [],
+      "docRef": "CAP-EVIDENCE",
+      "cloud": null,
+      "scopeId": null,
+      "resourceKey": "gap:aws:111122223333:organizations",
+      "resourceName": "aws:111122223333:organizations",
+      "resourceType": "coverageGaps",
+      "message": "aws:111122223333:organizations の証跡を取得できなかった(理由: permission_denied)。",
+      "expected": "評価対象の全領域について証跡が取得できている。",
+      "remediation": "必要な読み取り権限を付与して再収集する。取得できない領域は「問題なし」ではなく未評価として扱う。",
+      "validation": "再収集で coverageGaps が空になること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-X-001-0031",
+      "ruleId": "NHI-X-001",
+      "title": "証跡が取得できていない領域がある",
+      "severity": "info",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [],
+      "docRef": "CAP-EVIDENCE",
+      "cloud": null,
+      "scopeId": null,
+      "resourceKey": "gap:aws:111122223333:us-east-1:ec2-instances",
+      "resourceName": "aws:111122223333:us-east-1:ec2-instances",
+      "resourceType": "coverageGaps",
+      "message": "aws:111122223333:us-east-1:ec2-instances の証跡を取得できなかった(理由: not_collected)。",
+      "expected": "評価対象の全領域について証跡が取得できている。",
+      "remediation": "必要な読み取り権限を付与して再収集する。取得できない領域は「問題なし」ではなく未評価として扱う。",
+      "validation": "再収集で coverageGaps が空になること。",
+      "caveat": null
+    },
+    {
+      "id": "NHI-X-001-0030",
+      "ruleId": "NHI-X-001",
+      "title": "証跡が取得できていない領域がある",
+      "severity": "info",
+      "confidence": "high",
+      "evidenceIncomplete": false,
+      "owasp": [],
+      "docRef": "CAP-EVIDENCE",
+      "cloud": null,
+      "scopeId": null,
+      "resourceKey": "gap:aws:scope",
+      "resourceName": "aws:scope",
+      "resourceType": "coverageGaps",
+      "message": "aws:scope の証跡を取得できなかった(理由: scope_limited)。",
+      "expected": "評価対象の全領域について証跡が取得できている。",
+      "remediation": "必要な読み取り権限を付与して再収集する。取得できない領域は「問題なし」ではなく未評価として扱う。",
+      "validation": "再収集で coverageGaps が空になること。",
+      "caveat": null
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "Accounts": [
+    {
+      "Id": "111122223333",
+      "Name": "this-account"
+    },
+    {
+      "Id": "222233334444",
+      "Name": "sibling-prod"
+    }
+  ]
+}

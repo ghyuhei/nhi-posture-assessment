@@ -1,0 +1,4 @@
+{"/subscriptions/s1/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/shared-mi":
+  ["vm-1","vm-2","func-1"],
+ "/subscriptions/s1/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/single-mi":
+  ["vm-9"]}

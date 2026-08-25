@@ -1,0 +1,5 @@
+{"value":[
+ {"id":"/subscriptions/s1/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/shared-mi",
+  "name":"shared-mi","principalId":"mi-principal-1"},
+ {"id":"/subscriptions/s1/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/single-mi",
+  "name":"single-mi","principalId":"mi-principal-2"}]}

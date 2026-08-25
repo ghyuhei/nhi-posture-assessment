@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NHI(非人間アイデンティティ)— AWS / Azure ネイティブ機能 総棚卸し (2026-08 rev.2)</title>
+<style>
+  :root {
+    --bg:#fff; --fg:#1a1a2e; --muted:#5c6370; --border:#d8dce3;
+    --accent:#7b2ff7; --accent2:#0b6cff; --aws:#c2680a; --az:#0b6cff;
+    --th-bg:#f2f4f8; --row-alt:#fafbfc;
+    --ok:#0a7d33; --ng:#c22f2f; --warn:#8a5b00;
+    --ok-bg:#e8f5ec; --ng-bg:#fbeaea; --warn-bg:#fff4d6;
+    --code-bg:#f0f2f5; --card-bg:#f8f9fb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#14161c; --fg:#e4e6eb; --muted:#9aa1ad; --border:#333945;
+      --accent:#b98cff; --accent2:#5b9dff; --aws:#ffb454; --az:#5b9dff;
+      --th-bg:#1e222b; --row-alt:#191c24;
+      --ok:#5dd48a; --ng:#ff8080; --warn:#ffd166;
+      --ok-bg:#12301c; --ng-bg:#3a1a1a; --warn-bg:#3a2f10;
+      --code-bg:#21252e; --card-bg:#1a1e26;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
+       background:var(--bg);color:var(--fg);line-height:1.62;font-size:15px}
+  .wrap{max-width:1220px;margin:0 auto;padding:24px 20px 80px}
+  h1{font-size:1.5rem;border-bottom:3px solid var(--accent);padding-bottom:10px;margin:8px 0 4px}
+  h2{font-size:1.2rem;margin:44px 0 8px;padding:6px 12px;border-left:5px solid var(--accent);background:var(--card-bg);border-radius:0 6px 6px 0}
+  h3{font-size:1.02rem;margin:24px 0 6px;color:var(--accent2)}
+  .meta{color:var(--muted);font-size:.85rem;margin-bottom:16px}
+  .note{background:var(--warn-bg);border:1px solid var(--warn);border-radius:8px;padding:10px 14px;margin:14px 0;font-size:.89rem}
+  .bad{background:var(--ng-bg);border:1px solid var(--ng);border-radius:8px;padding:10px 14px;margin:14px 0;font-size:.89rem}
+  .good{background:var(--ok-bg);border:1px solid var(--ok);border-radius:8px;padding:10px 14px;margin:14px 0;font-size:.89rem}
+  .tablebox{overflow-x:auto;margin:10px 0 20px;border:1px solid var(--border);border-radius:8px}
+  table{border-collapse:collapse;width:100%;min-width:960px;font-size:.84rem}
+  th{background:var(--th-bg);text-align:left;padding:9px 10px;border-bottom:2px solid var(--border)}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:nth-child(even) td{background:var(--row-alt)}
+  tr:last-child td{border-bottom:none}
+  td.num{text-align:center;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  td.dom{font-weight:600}
+  .awsc{color:var(--aws);font-weight:600}
+  .azc{color:var(--az);font-weight:600}
+  .m{display:inline-block;min-width:1.5em;text-align:center;font-weight:700;border-radius:4px;padding:1px 5px;font-size:.9em}
+  .m-aa{background:var(--ok);color:var(--bg)}
+  .m-a{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok)}
+  .m-b{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn)}
+  .m-c{background:var(--ng-bg);color:var(--ng);border:1px solid var(--ng)}
+  code,.k{font-family:ui-monospace,"SF Mono",Consolas,monospace;background:var(--code-bg);padding:1px 5px;border-radius:4px;font-size:.86em}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:.81rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  ul,ol{padding-left:1.35em}
+  li{margin:4px 0}
+  .finding{border:1px solid var(--border);border-left:5px solid var(--ng);border-radius:0 8px 8px 0;padding:11px 15px;margin:12px 0;background:var(--card-bg);font-size:.92rem}
+  .finding .ttl{font-weight:700;font-size:.97rem;margin-bottom:3px}
+  .finding .tag{display:inline-block;font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--ng-bg);color:var(--ng);margin-right:6px;vertical-align:1px}
+  .finding.mid{border-left-color:var(--warn)}
+  .finding.mid .tag{background:var(--warn-bg);color:var(--warn)}
+  .finding.pos{border-left-color:var(--ok)}
+  .finding.pos .tag{background:var(--ok-bg);color:var(--ok)}
+  .legend{font-size:.84rem;color:var(--muted);margin:6px 0 12px}
+  .toc{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:12px 18px;margin:16px 0 6px}
+  .toc ol{margin:4px 0;columns:2;column-gap:30px}
+  .toc a{color:var(--accent2);text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  .unv{color:var(--warn);font-weight:600}
+  .src{font-size:.79rem;color:var(--muted)}
+  .src a{color:var(--accent2)}
+  .rev{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.84rem;margin:14px 0}
+  footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--border);color:var(--muted);font-size:.81rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>NHI(非人間アイデンティティ)— AWS / Azure ネイティブ機能 総棚卸し</h1>
+<div class="meta">
+rev.2 / 2026-08 &nbsp;·&nbsp; OWASP Non-Human Identities Top 10 (2025) 対応マッピング付き<br>
+評価軸は「ネイティブ機能だけで、その能力が運用に耐える水準まで到達するか」。機能名の列挙ではなく、<strong>運用で穴になる箇所</strong>を優先して記述する。
+</div>
+
+<div class="toc">
+<strong>目次</strong>
+<ol>
+<li><a href="#s1">結論</a></li>
+<li><a href="#s2">スコープ: 何をNHIと数えるか</a></li>
+<li><a href="#s3">能力マトリクス(21領域)</a></li>
+<li><a href="#s4">OWASP NHI Top 10 × 充足度</a></li>
+<li><a href="#s5">AIエージェントID</a></li>
+<li><a href="#s6">構造的欠陥 12項目</a></li>
+<li><a href="#s7">ターゲット構成</a></li>
+<li><a href="#s8">90日ロードマップ</a></li>
+<li><a href="#s9">検証状況と出典</a></li>
+</ol>
+</div>
+
+<h2 id="s1">1. 結論</h2>
+
+<div class="bad">
+ネイティブで解決できるのは NHI 課題の <strong>認証方式</strong>と<strong>権限量</strong>に偏る。本丸である <strong>①所有者の特定 ②廃止判断 ③クラウド外NHIの可視化</strong> は両クラウドとも未解決。
+「ネイティブで足りるか」は <strong>No</strong>。ただし NHI インシデントの大半は<strong>既にある機能を使い切っていない</strong>ことに起因し、多くの組織は使い切る前に製品検討へ進んでいる。
+</div>
+
+<ol>
+<li><strong>静的シークレットの予防的禁止は Azure が優位。</strong> Entra の application management policy はテナント既定で client secret 作成を禁止し最大寿命を強制できる。AWS の対応物は SCP の <code>iam:CreateAccessKey</code> Deny だけで、既存キーに遡及しない。</li>
+<li><strong>権限の右サイズ化は AWS が優位。</strong> Access Analyzer の unused access(追跡期間 1〜365日で設定可)→ policy generation → custom policy checks は、実使用実績からポリシーを生成し CI で検証できる唯一の完成された導線。</li>
+<li><strong>ローテーションは「誰が鍵を持つか」で決まる。</strong> Azure のマネージド ID は有効期間90日の証明書を約45日で自動更新し、閲覧も取得もできない(漏らしようがない)。一方、自分が保有するシークレット(IAM アクセスキー、client secret)を自動ローテーションする機構は<strong>両クラウドとも存在しない</strong>。周期短縮ではなく保有をやめることが唯一の対策。</li>
+<li><strong>最大の見落としは IMDSv2。</strong> ワークロード資格情報の窃取経路として実績が突出しているのは SSRF 経由のインスタンスメタデータ奪取であり、その唯一の構造的対策が IMDSv2 強制。アカウント既定は<strong>リージョン単位のオプトイン</strong>で、既存インスタンスには適用されない。ここが空いたまま他の NHI 施策を積んでも効果は限定的。</li>
+<li><strong>CIEM に空白期がある。</strong> Entra Permissions Management は 2025-10-01 廃止・2025-11-01 サポート終了。Defender CSPM に吸収されたが Permissions Creep Index は廃止。移行を実施していない組織は現在 CIEM 可視性を失っている。</li>
+</ol>
+
+<h2 id="s2">2. スコープ: 何を NHI と数えるか</h2>
+<p>NHI 対策が失敗する最大の理由は対象集合が合意されていないこと。IAM ロールだけを数えて「棚卸し完了」とする例が多い。</p>
+
+<div class="tablebox">
+<table>
+<thead><tr><th style="width:15%">NHI の型</th><th style="width:31%">AWS での実体</th><th style="width:31%">Azure での実体</th><th style="width:23%">ネイティブ管理</th></tr></thead>
+<tbody>
+<tr><td class="dom">実行時ワークロード ID</td><td>IAM ロール(EC2 インスタンスプロファイル / Lambda / ECS タスクロール / EKS Pod Identity・IRSA)</td><td>マネージド ID(システム / ユーザー割り当て)、Arc 有効化サーバー</td><td><span class="m m-aa">◎</span> 両者成熟。ここを100%にするのが最大ROI</td></tr>
+<tr><td class="dom">外部フェデレーション ID</td><td>IAM OIDC/SAML IdP + <code>AssumeRoleWithWebIdentity</code>、IAM Roles Anywhere(X.509)</td><td>アプリ登録 + フェデレーション ID 資格情報(FIC)</td><td><span class="m m-a">○</span> 信頼条件の設計品質に全依存</td></tr>
+<tr><td class="dom">静的キー / シークレット</td><td>IAM ユーザーのアクセスキー</td><td>client secret、Storage アカウントキー / SAS</td><td><span class="m m-b">△</span> 検出は可能、予防は Azure のみ強い</td></tr>
+<tr><td class="dom">証明書 / mTLS ID</td><td>ACM、AWS Private CA、Roles Anywhere 用クライアント証明書</td><td>Key Vault 証明書、アプリの証明書資格情報</td><td><span class="m m-b">△</span> AWS はコスト、Azure は連携欠落が障害</td></tr>
+<tr><td class="dom">OAuth クライアント / アプリ</td><td>Cognito アプリクライアント</td><td>アプリ登録 + エンタープライズアプリ(SP)</td><td><span class="m m-b">△</span> AWS 側は棚卸しツールの対象外</td></tr>
+<tr><td class="dom">データ面の ID</td><td>RDS/Aurora DB ユーザー、ElastiCache AUTH、MSK SCRAM、Redshift ユーザー</td><td>SQL contained user、Cosmos DB キー、Service Bus SAS</td><td><span class="m m-c">×</span> IAM/Entra の棚卸しから完全に漏れる</td></tr>
+<tr><td class="dom">Kubernetes ID</td><td>ServiceAccount トークン、IRSA、EKS Pod Identity</td><td>AKS workload identity、ServiceAccount トークン</td><td><span class="m m-b">△</span> クラスタ内部の SA は管理外</td></tr>
+<tr><td class="dom">サードパーティ / SaaS NHI</td><td colspan="2">GitHub PAT / Actions トークン、CI ランナートークン、監視 SaaS のインジェストキー、Snowflake / Datadog / Slack のキー</td><td><span class="m m-c">×</span> <strong>両クラウドのコンソールに一切現れない</strong></td></tr>
+<tr><td class="dom">AI エージェント ID</td><td>Bedrock AgentCore Identity のワークロード ID + トークン金庫</td><td>Microsoft Entra Agent ID、Agent 365</td><td><span class="m m-a">○</span> 新設。既存台帳に未反映が大半</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+<strong>報告時の必須注記:</strong> 下の3行(データ面 ID / k8s SA / SaaS NHI)は AWS Config・Entra いずれのインベントリにも現れない。
+「NHI は N 件」と報告するなら<strong>母数がこの3行を含むか</strong>を必ず併記する。含まないならそれは NHI 棚卸しではなく IAM 棚卸しである。
+</div>
+
+<h2 id="s3">3. 能力マトリクス(21領域)</h2>
+<div class="legend">
+<span class="m m-aa">◎</span> ネイティブで完結・運用に耐える &nbsp;
+<span class="m m-a">○</span> 実用水準だが条件・課金・制約付き &nbsp;
+<span class="m m-b">△</span> 部分的・自作の接着剤が必要 &nbsp;
+<span class="m m-c">×</span> ネイティブに存在しない
+</div>
+
+<div class="tablebox">
+<table>
+<thead><tr>
+<th style="width:3%">#</th><th style="width:11%">能力領域</th>
+<th style="width:27%">AWS</th><th style="width:4%"></th>
+<th style="width:27%">Azure / Entra</th><th style="width:4%"></th>
+<th style="width:24%">穴</th>
+</tr></thead>
+<tbody>
+
+<tr><td class="num">1</td><td class="dom">ワークロード ID の発行</td>
+<td>IAM ロール + インスタンスプロファイル、Lambda / ECS タスクロール、EKS Pod Identity、IRSA</td><td><span class="m m-aa">◎</span></td>
+<td>マネージド ID(システム / ユーザー割り当て)。Arc でオンプレ VM にも付与可</td><td><span class="m m-aa">◎</span></td>
+<td>「作れる」が「既存資産を移行する」導線は無い。主戦場はアプリ改修</td></tr>
+
+<tr><td class="num">2</td><td class="dom">資格情報の保有者</td>
+<td>ロールの一時認証情報は AWS 側が発行・失効。保有しない</td><td><span class="m m-aa">◎</span></td>
+<td><strong>マネージド ID は有効期間90日の証明書を約45日で自動更新。閲覧・取得・手動更新のいずれも不可</strong></td><td><span class="m m-aa">◎</span></td>
+<td>両者の最大の価値はここ。「見えない資格情報は漏れない」。ただし適用範囲は自クラウド内に限られる</td></tr>
+
+<tr><td class="num">3</td><td class="dom">外部 / オンプレからの認証</td>
+<td>IAM Roles Anywhere(サービスは無料)、OIDC / SAML IdP</td><td><span class="m m-a">○</span></td>
+<td>Workload identity federation(FIC)、Arc マネージド ID</td><td><span class="m m-a">○</span></td>
+<td>AWS: 信頼アンカーあたり CRL 2件上限(調整不可)、CDP/OCSP 非対応。Azure: FIC は<strong>20件上限</strong>、flexible FIC はプレビュー</td></tr>
+
+<tr><td class="num">4</td><td class="dom">フェデレーション信頼条件の精度</td>
+<td><strong>2026-02 に STS が GitHub / Google / CircleCI / OCI の provider 固有クレームを条件キーとして検証可能に</strong>(信頼ポリシーと RCP で使用可、identity-based policy と permission boundary では不可)</td><td><span class="m m-a">○</span></td>
+<td>FIC の subject 完全一致のみ。provider 固有クレームの条件評価は無い</td><td><span class="m m-b">△</span></td>
+<td>AWS はリポジトリ ID など不変値で固定できるようになったが<strong>オプトインで既存ロールには効かない</strong>。Azure は 20件上限が緩い subject 設計への圧力になる</td></tr>
+
+<tr><td class="num">5</td><td class="dom">静的キーの予防的禁止</td>
+<td>SCP の <code>iam:CreateAccessKey</code> Deny のみ。既存キーには無効</td><td><span class="m m-b">△</span></td>
+<td>application management policy でシークレット追加禁止 / 最大寿命 / 証明書寿命をテナント既定として強制。<strong>アプリ登録用の <code>applicationRestrictions</code> とサービスプリンシパル用の <code>servicePrincipalRestrictions</code> は別枠で、両方を設定しないと片側が野放しになる</strong>。加えて <code>disableLocalAuth</code> 系 Azure Policy(Storage <code>allowSharedKeyAccess</code>、Service Bus <code>cfb11c26-…</code>、Cosmos DB)</td><td><span class="m m-aa">◎</span></td>
+<td><strong>両クラウド最大の非対称。</strong> AWS には「シークレットを作らせない」テナント級ポリシーが存在しない</td></tr>
+
+<tr><td class="num">6</td><td class="dom">SP プロパティの改ざん防止</td>
+<td>該当概念なし(ロールに資格情報を「追加」する操作が存在しないため不要)</td><td>—</td>
+<td><strong>App Instance Property Lock</strong>。署名資格情報等の変更をホームテナント外からブロック。<span class="unv">unverified: 2026-06 より新規アプリで既定有効</span></td><td><span class="m m-a">○</span></td>
+<td>既存アプリには適用されない。「既存 SP に資格情報を足す」永続化手法への対策として要個別適用</td></tr>
+
+<tr><td class="num">7</td><td class="dom">トークン窃取耐性(メタデータ)</td>
+<td><strong>IMDSv2</strong>。アカウント既定はリージョン単位で設定、<code>ec2:MetadataHttpTokens</code> を SCP で強制、<code>MetadataNoTokenRejected</code> で移行監視。2024年中頃以降の新インスタンスタイプは IMDSv2 のみ</td><td><span class="m m-a">○</span></td>
+<td>Azure IMDS は <code>Metadata:true</code> ヘッダ必須で単純な SSRF を弾く</td><td><span class="m m-a">○</span></td>
+<td><strong>AWS はオプトイン、かつ既存インスタンスに遡及しない。</strong> 最も費用対効果が高い施策でありながら未適用のまま放置される代表例</td></tr>
+
+<tr><td class="num">8</td><td class="dom">シークレット保管</td>
+<td>Secrets Manager、SSM Parameter Store(SecureString)</td><td><span class="m m-aa">◎</span></td>
+<td>Key Vault、Managed HSM</td><td><span class="m m-aa">◎</span></td>
+<td>保管は解決済み。問題は保管庫の外にあるシークレットで、それを見つける機能ではない</td></tr>
+
+<tr><td class="num">9</td><td class="dom">自動ローテーション</td>
+<td>managed rotation(RDS / Redshift / DocumentDB、Lambda 不要)。2025-11 の managed external secrets で Salesforce / BigID / Snowflake。他は Lambda 自作</td><td><span class="m m-a">○</span></td>
+<td>ネイティブ対象は Storage / Cosmos DB のキーのみ。他は Event Grid <code>SecretNearExpiry</code>(期限30日前)+ Function 自作</td><td><span class="m m-b">△</span></td>
+<td>ローテーション Lambda / Function 自体が特権 NHI になる点が見落とされる。<strong>Key Vault の証明書更新をアプリ登録の資格情報へ反映するネイティブ経路は存在しない</strong></td></tr>
+
+<tr><td class="num">10</td><td class="dom">証明書 / PKI</td>
+<td>ACM、AWS Private CA。汎用 CA $400/月 + $0.75/証明書、short-lived mode $50/月 + $0.058/証明書(有効期間7日以内)</td><td><span class="m m-a">○</span></td>
+<td>Key Vault 証明書(統合 CA で自動更新)。企業 PKI 相当は AD CS / サードパーティ依存</td><td><span class="m m-b">△</span></td>
+<td>AWS は CA 単位課金のため「用途別に CA を分ける」正しい設計が高くつく</td></tr>
+
+<tr><td class="num">11</td><td class="dom">インベントリ / 発見</td>
+<td>AWS Config、Resource Explorer、<code>list-*</code>。<strong>IAM 認証情報レポートは IAM ユーザー専用でロールを含まない</strong></td><td><span class="m m-a">○</span></td>
+<td>アプリ登録 / エンタープライズアプリ一覧、Microsoft Graph、マネージド ID 一覧</td><td><span class="m m-a">○</span></td>
+<td>いずれも「IAM / Entra に登録されたもの」しか列挙しない。§2 の下3行は原理的に出ない</td></tr>
+
+<tr><td class="num">12</td><td class="dom">所有者(オーナーシップ)</td>
+<td><strong>概念が無い。</strong> タグ運用で代替(強制も検証もされない)</td><td><span class="m m-c">×</span></td>
+<td>アプリ登録の <code>owners</code> 属性。エージェント ID は所有者 / スポンサーを内蔵</td><td><span class="m m-b">△</span></td>
+<td>Azure でも退職者が owner のまま残る。<strong>OWASP NHI1 が未解決である根本原因</strong></td></tr>
+
+<tr><td class="num">13</td><td class="dom">権限の右サイズ化</td>
+<td>Access Analyzer: unused access(追跡期間 1〜365日、$0.20/ロール・ユーザー/月)、policy generation、custom policy checks(CI 組込み可)、external / internal access findings</td><td><span class="m m-aa">◎</span></td>
+<td>Defender CSPM の CIEM(旧 Entra Permissions Management の後継)</td><td><span class="m m-b">△</span></td>
+<td>AWS の対象は IAM ロール / ユーザーのみ。Cognito アプリクライアント、RDS 内 DB ユーザー等は含まれない</td></tr>
+
+<tr><td class="num">14</td><td class="dom">JIT 権限昇格</td>
+<td>該当機能なし(ロール切替が代替)</td><td><span class="m m-c">×</span></td>
+<td><strong>PIM は SP / マネージド ID に「対象(eligible)」割り当てができない</strong>。有効化操作を実行できないため。付与できるのは期限付きのアクティブ割り当てまで</td><td><span class="m m-c">×</span></td>
+<td>PIM を NHI の JIT 統制として提案するのは誤り。<strong>両クラウドとも NHI 向け JIT は未実装</strong></td></tr>
+
+<tr><td class="num">15</td><td class="dom">最終利用の可視化</td>
+<td><strong>IAM last accessed は直近400日を追跡</strong>。Access Analyzer の追跡期間も 1〜365日で設定可(Security Hub 経由の分析器のみ90日固定)</td><td><span class="m m-aa">◎</span></td>
+<td>SP サインインログ。保持は Free 7日 / P1・P2 30日。<strong>Graph API 取得と診断設定による長期保管には P1 以上が必要</strong></td><td><span class="m m-b">△</span></td>
+<td>AWS は年次ジョブでも判定できる。<strong>Azure は長期退避を先に用意しない限り廃止判断が原理的に不可能</strong></td></tr>
+
+<tr><td class="num">16</td><td class="dom">条件付きアクセス</td>
+<td>IAM 条件キー(<code>aws:SourceIp</code> / <code>aws:SourceVpce</code> / <code>aws:PrincipalOrgID</code>)+ SCP / RCP による data perimeter</td><td><span class="m m-a">○</span></td>
+<td>Conditional Access for workload identities(Workload ID Premium、約 $3/ワークロード/月)</td><td><span class="m m-b">△</span></td>
+<td><strong>Azure は単一テナントアプリのみ対象で、マネージド ID と Microsoft 製アプリは対象外。</strong> 最も数の多いマネージド ID を CA で守れない</td></tr>
+
+<tr><td class="num">17</td><td class="dom">サービス間認可</td>
+<td><strong>VPC Lattice auth policy</strong>。SigV4 必須化し <code>vpc-lattice-svcs:SourceVpc</code> / <code>RequestMethod</code> / <code>RequestPath</code> で L7 認可。呼び出し側の identity policy と両方で許可が必要</td><td><span class="m m-a">○</span></td>
+<td>アプリロール(app role)+ Entra 認証。サービスメッシュ層の統一機構は無い</td><td><span class="m m-b">△</span></td>
+<td>AWS 優位だが VPC Lattice 採用が前提。Azure は個別実装に散る</td></tr>
+
+<tr><td class="num">18</td><td class="dom">権限付与の統制(同意)</td>
+<td>リソースベースポリシー + <code>sts:ExternalId</code>。第三者への権限付与は IAM ロールに集約</td><td><span class="m m-a">○</span></td>
+<td><strong>permission grant policy / <code>authorizationPolicy</code> / 管理者同意ワークフロー</strong>でユーザー同意を制限し、Graph アプリケーション権限の付与を承認制にできる</td><td><span class="m m-aa">◎</span></td>
+<td>Entra 側の不正同意付与(illicit consent grant)は NHI の主要侵入経路。<strong>ユーザー同意を既定のまま放置している組織が多い</strong></td></tr>
+
+<tr><td class="num">19</td><td class="dom">予防的ガードレール</td>
+<td>SCP + RCP。RCP は 2024-11 に5サービス(S3 / STS / KMS / SQS / Secrets Manager)開始、上限は組織あたり2,000</td><td><span class="m m-a">○</span></td>
+<td>Azure Policy(deny / deployIfNotExists)、application management policy、管理グループ階層</td><td><span class="m m-aa">◎</span></td>
+<td>RCP のサポート対象サービスはまだ全サービスではない。<span class="unv">unverified: 2026-07 時点で20数サービス</span>。「データ境界を張った」と言うには対象外一覧の併記が必須</td></tr>
+
+<tr><td class="num">20</td><td class="dom">異常検知 / 漏洩検出</td>
+<td>GuardDuty(Extended Threat Detection の attack sequence は Critical 固定)。公開リポジトリで露出した<strong>IAM ユーザーのアクセスキー</strong>に <code>AWSCompromisedKeyQuarantine*</code> を適用しサポートケースを起票。Amazon Q Developer のコードレビューがシークレット露出を検出</td><td><span class="m m-a">○</span></td>
+<td>ID Protection の workload identity リスク検出(脅威インテリジェンス / <strong>漏洩資格情報 = ダークウェブ・paste サイト・公開 GitHub</strong> / 不審サインイン / OAuth アプリへの異常な資格情報追加)。Defender for Cloud のエージェントレスシークレットスキャンが Azure VM / AWS EC2 / GCP のディスクを走査</td><td><span class="m m-aa">◎</span></td>
+<td><strong>AWS の quarantine はポリシー付与でありキー無効化ではない。</strong> Azure は漏洩検出とディスク走査の両輪で明確に先行。CodeGuru Security は 2025-11-20 サポート終了</td></tr>
+
+<tr><td class="num">21</td><td class="dom">棚卸し / 失効</td>
+<td>キー無効化 API、<code>aws:TokenIssueTime</code> による発行済みセッションの一括失効。<strong>定期アクセスレビュー機構は無い</strong></td><td><span class="m m-b">△</span></td>
+<td>Entra ID Governance のアクセスレビュー(SP 対象、Workload ID Premium 必須)。SP 無効化は <code>accountEnabled=false</code></td><td><span class="m m-a">○</span></td>
+<td>Azure 優位。ただしレビュー担当者は <code>owners</code> が正しい場合のみ機能し、#12 の穴に直結する</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="good">
+<strong>読み方:</strong> AWS と Azure は得意分野が正反対で、優劣ではなく<strong>補完関係</strong>にある。
+AWS が勝つのは #13 権限の右サイズ化・#15 最終利用の可視化・#17 サービス間認可。Azure が勝つのは #5 静的キーの予防的禁止・#18 同意統制・#20 漏洩検出・#21 棚卸し。
+マルチクラウド組織は、Azure の予防ポリシー思想を AWS へ SCP/RCP + CI ガードレールとして移植し、AWS の実績ベース権限削減思想を Azure へ Defender CSPM + 自作レポートとして移植するのが現実解。
+</div>
+
+<h2 id="s4">4. OWASP Non-Human Identities Top 10 (2025) × 充足度</h2>
+
+<div class="tablebox">
+<table>
+<thead><tr>
+<th style="width:13%">OWASP 項目</th><th style="width:19%">典型的な失敗形</th>
+<th style="width:23%">AWS で届く所</th><th style="width:23%">Azure で届く所</th><th style="width:22%">残余リスク</th>
+</tr></thead>
+<tbody>
+<tr><td class="dom">NHI1 Improper Offboarding</td><td>不要になった NHI が無効化されず残る</td>
+<td><span class="m m-b">△</span> 400日の last accessed で「使われていない」は分かる。<strong>「不要である」は分からない</strong></td>
+<td><span class="m m-a">○</span> SP アクセスレビュー + <code>owners</code> で承認フローを回せる</td>
+<td>所有者データの品質。CI / SaaS 側トークンは対象外</td></tr>
+
+<tr><td class="dom">NHI2 Secret Leakage</td><td>キー / トークンが非管理の場所へ流出</td>
+<td><span class="m m-b">△</span> 公開リポの IAM ユーザーキーに quarantine 適用。Q Developer がコード内シークレットを検出</td>
+<td><span class="m m-aa">◎</span> 漏洩資格情報検出(ダークウェブ / paste / 公開 GitHub)+ ディスクのエージェントレススキャン</td>
+<td>チャット / チケット / ビルドログ / 端末内。プライベートリポ</td></tr>
+
+<tr><td class="dom">NHI3 Vulnerable Third-Party NHI</td><td>サードパーティ連携が侵害され付与済み権限が悪用される</td>
+<td><span class="m m-b">△</span> <code>sts:ExternalId</code> 必須化と権限の絞り込みのみ</td>
+<td><span class="m m-b">△</span> 同意統制、アプリガバナンス、App Instance Property Lock</td>
+<td><strong>最大の空白。</strong> 相手側の侵害は原理的に検知できない</td></tr>
+
+<tr><td class="dom">NHI4 Insecure Authentication</td><td>脆弱・非推奨な認証方式の継続利用</td>
+<td><span class="m m-a">○</span> SigV4 に一本化。IMDSv2 でメタデータ経路も封鎖できる</td>
+<td><span class="m m-a">○</span> app management policy で共有シークレット方式を禁止し証明書 / FIC へ強制移行</td>
+<td>データ面(DB ユーザー、SCRAM、SAS)はポリシーで縛れない</td></tr>
+
+<tr><td class="dom">NHI5 Overprivileged NHI</td><td>過剰権限の NHI が侵害され被害が拡大</td>
+<td><span class="m m-aa">◎</span> unused access → policy generation → custom policy checks で CI まで完結</td>
+<td><span class="m m-b">△</span> Defender CSPM の CIEM 推奨事項のみ</td>
+<td><strong>JIT は両クラウドとも不可</strong>(PIM は SP を eligible にできない)</td></tr>
+
+<tr><td class="dom">NHI6 Insecure Cloud Deployment Config</td><td>CI/CD に静的認証情報を埋め込み露出</td>
+<td><span class="m m-aa">◎</span> OIDC + provider 固有クレーム検証でリポジトリ ID 等の不変値に固定できる</td>
+<td><span class="m m-a">○</span> FIC で静的キーは排除できるが subject 完全一致のみ</td>
+<td>AWS の新条件キーはオプトイン。既存ロールの信頼ポリシーは手動で見直す必要がある</td></tr>
+
+<tr><td class="dom">NHI7 Long-Lived Secrets</td><td>期限が遠すぎる / 期限のないシークレット</td>
+<td><span class="m m-c">×</span> <strong>IAM アクセスキーに有効期限の概念が無い</strong>。SCP で作成を止める以外に手が無い</td>
+<td><span class="m m-aa">◎</span> app management policy の <code>maxLifetime</code> でテナント全体に上限を強制</td>
+<td>AWS の唯一の解は「IAM ユーザーを作らない」</td></tr>
+
+<tr><td class="dom">NHI8 Environment Isolation</td><td>同一 NHI を検証と本番で共用</td>
+<td><span class="m m-a">○</span> アカウント分離 + SCP/RCP + <code>aws:PrincipalOrgID</code> で構造的に分離</td>
+<td><span class="m m-b">△</span> <strong>アプリ登録はテナント単位</strong>のためマルチテナントアプリで容易に境界を跨ぐ</td>
+<td>「分離すべき」を強制する検査は両者とも自作</td></tr>
+
+<tr><td class="dom">NHI9 NHI Reuse</td><td>複数アプリで同一 NHI を使い回す</td>
+<td><span class="m m-c">×</span> 1ロールを多数のワークロードが引き受けても検知されない</td>
+<td><span class="m m-c">×</span> ユーザー割り当てマネージド ID の共有は正常動作扱い</td>
+<td><strong>予防も検出も無い。</strong> 設計レビューと IaC 静的検査でしか防げない</td></tr>
+
+<tr><td class="dom">NHI10 Human Use of NHI</td><td>人間が NHI の資格情報で手作業し監査証跡が壊れる</td>
+<td><span class="m m-b">△</span> <code>sts:SourceIdentity</code> を信頼ポリシーで必須化でき、<strong>ロールチェーン後も値が保持される</strong></td>
+<td><span class="m m-b">△</span> SP サインインログに IP は出るが人間かは判別不能</td>
+<td>本質的対策は「人間が使えるシークレットを存在させない」ことであり検知の話ではない</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="bad">
+ネイティブが <span class="m m-aa">◎</span> に届いたのは NHI2(Azure)・NHI5(AWS)・NHI6(AWS)・NHI7(Azure)のみで、<strong>いずれも片方のクラウドだけ</strong>。
+<strong>NHI3(サードパーティ)と NHI9(再利用)は両クラウドともネイティブ解が存在しない。</strong>
+専用 NHI 製品の導入は、自組織のリスクがこの2項目と所有者管理に集中しているかで判断するのが妥当。
+</div>
+
+<h2 id="s5">5. AI エージェント ID</h2>
+
+<div class="note">
+<span class="unv">unverified:</span> OWASP GenAI Security Project の Agentic Applications Top 10 (2026) は公式サイトが自動取得を拒否し、参照した二次情報間で ASI 番号が食い違う。
+本節では番号を使わず、NHI と直結する <strong>Identity &amp; Privilege Abuse</strong>(エージェント資格情報の窃取・なりすまし・過剰権限)のみを扱う。番号を引用する際は必ず公式ドキュメントを確認すること。
+</div>
+
+<div class="tablebox">
+<table style="min-width:820px">
+<thead><tr><th style="width:12%"></th><th style="width:44%">AWS: Bedrock AgentCore Identity</th><th style="width:44%">Azure: Microsoft Entra Agent ID</th></tr></thead>
+<tbody>
+<tr><td class="dom">ID の実体</td>
+<td>ワークロード ID。IAM ロール / OAuth トークン / API キーをまたぐ一貫した ID アンカー</td>
+<td>エージェント ID。Conditional Access / ID Protection / PIM という既存 Zero Trust スタックを拡張</td></tr>
+<tr><td class="dom">委譲の扱い</td>
+<td>リフレッシュトークンの金庫。inbound / outbound OAuth を分離</td>
+<td>OAuth 2.0 / MCP / A2A に準拠</td></tr>
+<tr><td class="dom">統制</td>
+<td>Cognito / Okta / Entra ID / Auth0 を信頼元にできる</td>
+<td>ブループリントで所有者・スポンサー・アクセス範囲・監査挙動をテンプレート化</td></tr>
+<tr><td class="dom">前提</td>
+<td>AgentCore 上で動くエージェント。AgentCore は 2025-10 GA</td>
+<td><span class="unv">unverified: GA 2026-04</span>。Agent 365 との組み合わせでライセンス構造が複雑</td></tr>
+<tr><td class="dom">共通の穴</td>
+<td colspan="2">自前ホストのエージェントと <strong>MCP サーバー自身の NHI</strong> は範囲外。エージェント→ツールの委譲チェーン全体を追跡する監査面が未成熟</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="bad">
+両クラウドとも「エージェントに ID を与える」ことは解決したが、<strong>「そのエージェントが誰の権限で、どのツールを、どの委譲チェーンで呼んだか」を一貫して追える監査面が無い</strong>。
+AI エージェントは NHI の中で唯一「実行内容が事前に確定しない」種別であり、静的な権限最小化が原理的に効きにくい。
+<strong>実行時の承認境界(どの操作に人間の承認を挟むか)</strong>を設計しない限り、エージェント ID の付与はリスクを移動させただけになる。
+</div>
+
+<h2 id="s6">6. 構造的欠陥 12項目</h2>
+
+<div class="finding">
+<div class="ttl"><span class="tag">致命</span>F-01: 所有者がネイティブに存在しない</div>
+AWS の IAM ロールに所有者概念は無く、タグは強制も検証もされないため真実源にならない。Azure は <code>owners</code> を持つ分マシだが、退職者が残る運用が常態化している。
+<strong>所有者が特定できない NHI は削除判断が下せず、永久に残る。</strong> OWASP NHI1 が未解決である原因はこの1点に集約される。
+</div>
+
+<div class="finding">
+<div class="ttl"><span class="tag">致命</span>F-02: AWS には「シークレットを作らせない」テナント級ポリシーが無い</div>
+Entra の application management policy はテナント既定として <code>passwordAddition</code> 禁止と <code>maxLifetime</code> 強制ができる。AWS の対応物は SCP の <code>iam:CreateAccessKey</code> Deny のみで、粒度も遡及性も劣る。
+<strong>OWASP NHI7 に対して AWS はネイティブに予防手段を持たない。</strong>
+</div>
+
+<div class="finding">
+<div class="ttl"><span class="tag">致命</span>F-03: NHI の再利用を検出する機構が両クラウドとも無い</div>
+1つの IAM ロールを10個のワークロードが引き受けても、1つのユーザー割り当てマネージド ID を10個のリソースが共有しても、両クラウドは正常動作として扱う。
+<strong>侵害時の影響範囲を最も左右する要因が可視化されていない。</strong> CloudTrail / サインインログの送信元多様性を自前で分析するしかない。
+</div>
+
+<div class="finding">
+<div class="ttl"><span class="tag">致命</span>F-04: IMDSv2 未強制のまま他の施策を積んでも効果が出ない</div>
+ワークロード資格情報の窃取で実績が突出しているのは SSRF 経由のインスタンスメタデータ奪取。唯一の構造的対策が IMDSv2 強制だが、
+<strong>アカウント既定はリージョン単位のオプトインで、既存インスタンスには遡及しない。</strong>
+NHI 施策の順序として、権限削減や棚卸しより先にここを閉じるべき。移行状況は <code>MetadataNoTokenRejected</code> で測れる。
+</div>
+
+<div class="finding mid">
+<div class="ttl"><span class="tag">重要</span>F-05: 「ローテーションしている」は保有者次第で意味が変わる</div>
+Azure のマネージド ID は有効期間90日の証明書を約45日で自動更新し、閲覧も取得もできない。<strong>プラットフォームが鍵を保有する限りローテーションは解決済み</strong>。
+一方、自分が保有するシークレット(IAM アクセスキー、client secret)を自動ローテーションする機構は両クラウドとも無い。
+<strong>周期短縮に工数を割くより、保有をやめる移行に割くべき。</strong> なお Key Vault の証明書更新をアプリ登録の資格情報へ反映するネイティブ経路も存在しない。
+</div>
+
+<div class="finding mid">
+<div class="ttl"><span class="tag">重要</span>F-06: PIM は NHI の JIT 統制にならない</div>
+PIM は<strong>サービスプリンシパル / マネージド ID に「対象(eligible)」割り当てができない</strong>。有効化操作を実行できる主体ではないため、付与できるのは期限付きのアクティブ割り当てまで。
+「NHI にも PIM で JIT を効かせる」という設計は成立しない。AWS にも該当機能は無く、<strong>NHI 向け JIT は両クラウドとも未実装</strong>と扱うべき。
+</div>
+
+<div class="finding mid">
+<div class="ttl"><span class="tag">重要</span>F-07: Azure の Conditional Access はマネージド ID に効かない</div>
+Conditional Access for workload identities は<strong>単一テナントアプリのみが対象で、マネージド ID と Microsoft 製アプリは対象外</strong>。
+Azure が推奨する本命であるマネージド ID が、Azure の看板統制の保護対象外という構造的なねじれがある。さらに Workload ID Premium は約 $3/ワークロード/月の別課金で、全適用は実務的に高コスト。
+</div>
+
+<div class="finding mid">
+<div class="ttl"><span class="tag">重要</span>F-08: Azure ではログ保持を先に手当てしないと廃止判断ができない</div>
+Entra サインインログは Free 7日 / P1・P2 30日で、<strong>Graph API 取得と診断設定による長期保管には P1 以上が必要</strong>。四半期バッチや年次ジョブの NHI を30日窓で「未使用」と誤判定する。
+対照的に <strong>AWS はこの問題を持たない</strong>: IAM last accessed は直近400日を追跡し、Access Analyzer の追跡期間も1〜365日で設定できる(90日固定なのは Security Hub 経由の分析器のみ)。
+</div>
+
+<div class="finding mid">
+<div class="ttl"><span class="tag">重要</span>F-09: フェデレーション信頼条件は AWS で改善したが、既存ロールは取り残される</div>
+2026-02 から AWS STS が GitHub / Google / CircleCI / OCI の provider 固有クレームを条件キーとして検証できるようになり、リポジトリ ID のような<strong>不変値</strong>で固定できる(リポジトリ改名・再作成による乗っ取りを封じられる)。
+ただし<strong>オプトインであり、既に <code>sub</code> をワイルドカードで許している既存ロールは手動で見直すまで危険なまま</strong>。信頼ポリシーと RCP でのみ使え、identity-based policy と permission boundary では使えない。
+Azure には provider 固有クレームの条件評価が無く、FIC の20件上限が緩い subject 設計への圧力として働く。
+</div>
+
+<div class="finding mid">
+<div class="ttl"><span class="tag">重要</span>F-10: 漏洩鍵の自動対応を過信できない(AWS)</div>
+<code>AWSCompromisedKeyQuarantine*</code> は AWS が公開リポジトリで露出を検出した際に適用され、サポートケースが起票される。ただし<strong>制限ポリシーの付与でありキーの無効化ではない</strong>。
+自動適用の契機は IAM ユーザーのアクセスキー露出であり、プライベートリポ・CI ログ・チャット経由の漏洩は対象外。「AWS が守ってくれる」という前提は成立しない。
+Azure 側は ID Protection の漏洩資格情報検出がダークウェブ・paste サイト・公開 GitHub を対象とし、この領域では明確に先行している。
+</div>
+
+<div class="finding mid">
+<div class="ttl"><span class="tag">重要</span>F-11: Private CA のコスト構造が mTLS ベース NHI の設計を歪める</div>
+汎用 CA $400/月 + $0.75/証明書、short-lived certificate mode(有効期間7日以内)$50/月 + $0.058/証明書。<strong>CA 単位課金のため、用途別・環境別に CA を分割する正しい設計が高コストになる。</strong>
+加えて Roles Anywhere は信頼アンカーあたり CRL 2件上限・CDP/OCSP 非対応で、失効設計が運用負荷になる。
+</div>
+
+<div class="finding pos">
+<div class="ttl"><span class="tag">好材料</span>F-12: クレデンシャルレス化だけは両クラウドとも完成している</div>
+IAM ロール / マネージド ID / OIDC フェデレーションを使い切れば、静的シークレットは技術的にほぼゼロにできる。
+<strong>NHI 課題の大半は「ネイティブに機能が無い」ではなく「既にある機能を使い切っていない」ことに起因する。</strong>
+製品検討の前に、まず自組織の静的シークレット残存率と IMDSv2 強制率を測ること。この2指標で議論の質が変わる。
+</div>
+
+<h2 id="s7">7. ターゲット構成</h2>
+
+<h3 class="awsc">AWS(ネイティブのみ)</h3>
+<ol>
+<li><strong>IMDSv2 をアカウント既定に設定し(全リージョン)、SCP で <code>ec2:MetadataHttpTokens</code> を強制</strong>。既存インスタンスは <code>modify-instance-metadata-options</code> で個別に移行し、<code>MetadataNoTokenRejected</code> がゼロになるまで追う</li>
+<li>IAM ユーザーの新規作成を組織全体で禁止し、既存を棚卸しで削除</li>
+<li>CI/CD は OIDC に統一。<strong>provider 固有クレーム(GitHub なら不変のリポジトリ ID)で信頼条件を固定</strong></li>
+<li>組織レベルの unused access アナライザーを有効化(追跡期間は業務周期に合わせ365日まで延ばす)</li>
+<li>custom policy checks を IaC の PR パイプラインに組み込み、権限が広がる変更をブロック</li>
+<li>RCP で組織外プリンシパルからのリソースアクセスを遮断(対象外サービスを文書化)</li>
+<li>GuardDuty を組織で有効化し attack sequence findings を Security Hub に集約</li>
+</ol>
+
+<pre><code>// SCP: 静的資格情報の新規作成と IMDSv1 起動を同時に禁止する
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyStaticCredentialCreation",
+      "Effect": "Deny",
+      "Action": ["iam:CreateUser", "iam:CreateAccessKey", "iam:CreateLoginProfile"],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": { "aws:PrincipalArn": "arn:aws:iam::*:role/BreakGlassAdmin" }
+      }
+    },
+    {
+      "Sid": "RequireIMDSv2",
+      "Effect": "Deny",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:*:*:instance/*",
+      "Condition": {
+        "StringNotEquals": { "ec2:MetadataHttpTokens": "required" }
+      }
+    }
+  ]
+}</code></pre>
+
+<pre><code>// GitHub Actions OIDC: sub のワイルドカードをやめ、不変のリポジトリ ID で固定する
+// NG: "token.actions.githubusercontent.com:sub": "repo:my-org/*"
+{
+  "Effect": "Allow",
+  "Principal": { "Federated": "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com" },
+  "Action": "sts:AssumeRoleWithWebIdentity",
+  "Condition": {
+    "StringEquals": {
+      "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+      "token.actions.githubusercontent.com:sub": "repo:my-org/my-repo:environment:production"
+    }
+  }
+}</code></pre>
+<p class="src">provider 固有クレーム(<code>repository_id</code> 等)の条件キー名は 2026-02 追加分のため、適用前に現行ドキュメントで正確なキー名を確認すること。</p>
+
+<h3 class="azc">Azure(ネイティブのみ)</h3>
+<ol>
+<li><strong>テナント既定の application management policy</strong> で client secret の追加を禁止、または最大寿命を強制</li>
+<li>アプリ登録は証明書または FIC に統一。<strong>FIC の20件上限を前提にアプリ分割の設計指針を先に決める</strong></li>
+<li><strong>ユーザー同意を制限し、管理者同意ワークフローを有効化</strong>(Graph アプリケーション権限の付与を承認制にする)</li>
+<li>Azure Policy で <code>disableLocalAuth</code> / <code>allowSharedKeyAccess=false</code> を deny 強制(サービスごとに個別割り当て)</li>
+<li>Entra サインインログを Log Analytics / Sentinel へ長期退避(P1 以上が前提)。<strong>これを先にやらないと廃止判断ができない</strong></li>
+<li>重要な SP に Workload ID Premium を割り当て CA と ID Protection を適用。<strong>マネージド ID は対象外である事実を設計に織り込む</strong></li>
+<li>SP アクセスレビューを四半期で実施。前提として <code>owners</code> を必ず埋める</li>
+<li>Defender CSPM を有効化し CIEM とエージェントレスシークレットスキャンを稼働(AWS EC2 も対象にできる)</li>
+</ol>
+
+<pre><code>// Microsoft Graph: テナント既定で client secret の追加を禁止する
+// PATCH https://graph.microsoft.com/v1.0/policies/defaultAppManagementPolicy
+{
+  "isEnabled": true,
+  "applicationRestrictions": {
+    "passwordCredentials": [
+      { "restrictionType": "passwordAddition",       "state": "enabled", "restrictForAppsCreatedAfterDateTime": "2026-09-01T00:00:00Z" },
+      { "restrictionType": "customPasswordAddition", "state": "enabled", "restrictForAppsCreatedAfterDateTime": "2026-09-01T00:00:00Z" },
+      { "restrictionType": "passwordLifetime", "state": "enabled", "maxLifetime": "P90D",
+        "restrictForAppsCreatedAfterDateTime": "2026-09-01T00:00:00Z" }
+    ]
+  },
+  // サービスプリンシパル側は別枠。片方だけでは抜ける
+  "servicePrincipalRestrictions": {
+    "passwordCredentials": [
+      { "restrictionType": "passwordAddition", "state": "enabled", "restrictForAppsCreatedAfterDateTime": "2026-09-01T00:00:00Z" }
+    ]
+  }
+}</code></pre>
+<p class="src">既存アプリには遡及しないため、<code>restrictForAppsCreatedAfterDateTime</code> が実質的な移行スイッチになる。<span class="unv">unverified: 適用前に現行 API バージョンでプロパティ名を検証すること。</span></p>
+
+<h2 id="s8">8. 90日ロードマップ</h2>
+
+<div class="tablebox">
+<table style="min-width:860px">
+<thead><tr><th style="width:11%">期間</th><th style="width:28%">やること</th><th style="width:31%">ネイティブ機能</th><th style="width:30%">完了条件(測定可能な形で)</th></tr></thead>
+<tbody>
+<tr><td class="dom">Day 1–15</td>
+<td><strong>IMDSv2 強制</strong>(最優先)。アカウント既定を全リージョンで設定し、SCP で新規起動を縛る</td>
+<td>EC2 インスタンスメタデータ既定、<code>ec2:MetadataHttpTokens</code></td>
+<td><code>MetadataNoTokenRejected</code> の推移。IMDSv1 許容インスタンスの残数</td></tr>
+<tr><td class="dom">Day 1–15</td>
+<td>Entra サインインログの長期退避。<strong>これを先にやらないと Day 40 以降の廃止判断ができない</strong></td>
+<td>Entra 診断設定 → Log Analytics / Sentinel(P1 以上)</td>
+<td>13か月以上の保持が有効で、SP サインインが検索可能</td></tr>
+<tr><td class="dom">Day 1–15</td>
+<td>NHI 母数の確定。§2 の下3行を含めるかをここで決める</td>
+<td>Config、Resource Explorer、Graph、MI 一覧</td>
+<td>NHI 台帳 v0 と、<strong>台帳に載らない NHI 種別の明示リスト</strong></td></tr>
+<tr><td class="dom">Day 16–40</td>
+<td>予防ポリシーの投入。Azure は secret 作成禁止 + ユーザー同意制限、AWS は IAM ユーザー作成禁止</td>
+<td>application management policy、permission grant policy、SCP</td>
+<td>実機で作成/同意が拒否されること(スクリーンショット等の証跡)</td></tr>
+<tr><td class="dom">Day 25–55</td>
+<td>CI/CD を OIDC / FIC へ移行し、信頼条件を不変値で固定</td>
+<td>STS provider 固有クレーム条件キー、FIC</td>
+<td><strong>静的シークレット残存率</strong>。ワイルドカード <code>sub</code> がゼロであること</td></tr>
+<tr><td class="dom">Day 25–55</td>
+<td>権限削減。unused access の上位ロールを policy generation で再生成</td>
+<td>Access Analyzer(追跡期間を業務周期に合わせる)</td>
+<td>削減した権限の実数、custom policy checks が実際にブロックした件数</td></tr>
+<tr><td class="dom">Day 40–70</td>
+<td>所有者の埋め込みと四半期レビュー開始。所有者不明は「凍結 → 苦情が無ければ削除」</td>
+<td>Entra アクセスレビュー、AWS はタグ + 自作レポート</td>
+<td>所有者特定率。凍結後の復活要請件数(誤検知率の代理指標)</td></tr>
+<tr><td class="dom">Day 55–90</td>
+<td>検知の稼働。ディスク上の平文シークレットを AWS EC2 まで含めて洗い出す</td>
+<td>GuardDuty、Defender CSPM(CIEM + シークレットスキャン)、ID Protection</td>
+<td>発見された平文シークレットの実数と是正完了率</td></tr>
+<tr><td class="dom">Day 70–90</td>
+<td>エージェント ID を NHI 台帳の一級市民として登録。所有者と承認境界を先に定義</td>
+<td>Bedrock AgentCore Identity、Entra Agent ID</td>
+<td>所有者と承認境界が定義済みのエージェント割合</td></tr>
+<tr><td class="dom">Day 90</td>
+<td>残余(NHI3 / NHI9 / SaaS 側 NHI)を定量化し、専用製品の要否を判断</td>
+<td>—</td>
+<td>「ネイティブ対応済み / 残余」の比率を数字で提示できること</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="good">
+<strong>順序が結論を左右する。</strong> IMDSv2 とログ長期保管を最初に置くこと。
+IMDSv2 が空いたままでは権限削減の効果が資格情報窃取で無効化される。ログ保持を後回しにすると Day 40 以降の廃止判断が「30日窓で未使用に見える」という誤った根拠で行われ、四半期バッチを壊す。
+予防ポリシーを先に打たないと、棚卸しで削除した端から新しい静的シークレットが生成され続ける。
+</div>
+
+<h2 id="s9">9. 検証状況と出典</h2>
+
+<div class="rev">
+<strong>rev.2 での主な訂正(rev.1 の誤りを含む):</strong>
+<ul style="margin:6px 0">
+<li>ログ保持窓に関する指摘を訂正。AWS は IAM last accessed が400日、Access Analyzer の追跡期間も1〜365日設定可のため、rev.1 の「90日窓で誤判定する」は AWS には当たらない。Azure 固有の問題として整理し直した</li>
+<li>フェデレーション信頼条件を訂正。2026-02 に AWS STS が provider 固有クレーム検証に対応したため、rev.1 の「クラウドは検証しない」は現状に合わない</li>
+<li>シークレット検出の記述を訂正。Amazon Inspector code security は SAST / SCA / IaC であり、シークレット検出として文書化されているのは Amazon Q Developer のコードレビュー。CodeGuru Security は 2025-11-20 サポート終了</li>
+<li><code>AWSCompromisedKeyQuarantine*</code> の適用範囲を訂正(ユーザー・グループ・ロールに付与可能、自動適用の契機は IAM ユーザーキーの露出)</li>
+<li><code>sts:SourceIdentity</code> の対応範囲を訂正(AssumeRole / WithSAML / WithWebIdentity すべて、ロールチェーン後も保持)</li>
+<li>PIM の記述を訂正(SP / マネージド ID に eligible 割り当てはできない)。NHI 向け JIT を独立領域として追加</li>
+<li>IAM 認証情報レポートの適用範囲を明記(IAM ユーザー専用、ロールを含まない)</li>
+<li>追加: IMDSv2、STS provider 固有クレーム、VPC Lattice auth policy、App Instance Property Lock、Entra 同意統制、マネージド ID の資格情報自動更新(90日/45日)、ID Protection の workload identity 検出種別</li>
+<li>削除: 再現できない数値を掲げていた成熟度スコアカード、および §3 と重複していたサービス別カタログ2節</li>
+</ul>
+</div>
+
+<h3>一次 / 公式情報で確認した事実</h3>
+<ul>
+<li>Entra Permissions Management: 新規販売終了 2025-04-01(CSP 2025-05-01)、廃止 2025-10-01、サポート終了 2025-11-01。Defender CSPM に吸収、Delinea 提携あり。Permissions Creep Index は廃止され活動ベースロジックに置換</li>
+<li>Conditional Access for workload identities: 単一テナントアプリのみ、マネージド ID と Microsoft 製アプリは対象外</li>
+<li>PIM: サービスプリンシパル / マネージド ID に eligible 割り当て不可(有効化操作を実行できないため)。期限付きアクティブ割り当てのみ</li>
+<li>マネージド ID の資格情報: 有効期間90日、約45日で自動更新、閲覧・取得・手動更新は不可</li>
+<li>FIC: アプリ / ユーザー割り当て MI あたり20件上限、flexible FIC はプレビュー</li>
+<li>application management policy: <code>passwordAddition</code> / <code>customPasswordAddition</code> / <code>symmetricKeyAddition</code> の制限と <code>maxLifetime</code> 強制が可能。ポリシーは <code>applicationRestrictions</code> と <code>servicePrincipalRestrictions</code> の 2 系統を持つ(Microsoft Graph の OData メタデータで確認)</li>
+<li>App Instance Property Lock: 署名資格情報等の変更をホームテナント外からブロック</li>
+<li>Entra 同意統制: permission grant policy / <code>authorizationPolicy</code> / 管理者同意ワークフロー</li>
+<li>Key Vault: ネイティブ自動ローテーションは Storage / Cosmos DB のキーのみ。他は <code>SecretNearExpiry</code>(30日前)+ Function。<strong>アプリ登録の資格情報を Key Vault から自動更新するネイティブ経路は存在しない</strong></li>
+<li>Entra サインインログ: Free 7日 / P1・P2 30日。Graph API 取得と診断設定エクスポートには P1 以上が必要(テナントに1本あればよい)</li>
+<li>ID Protection の workload identity 検出: 脅威インテリジェンス / 漏洩資格情報(ダークウェブ・paste サイト・公開 GitHub)/ 不審サインイン / OAuth アプリへの異常な資格情報追加</li>
+<li>Defender for Cloud: エージェントレスシークレットスキャンは Azure VM / AWS EC2 / GCP 対象、Defender CSPM または Defender for Servers P2 で GA</li>
+<li>Azure Policy: Function apps should use managed identity(<code>0da106f2-…</code>)、App Service apps should use managed identity(<code>2b9ad585-…</code>)、Service Bus ローカル認証無効化(<code>cfb11c26-…</code>)</li>
+<li>IAM Access Analyzer: unused access は $0.20/IAM ロール・ユーザー/月、追跡期間は1〜365日で設定可(プリセット30/60/90)。Security Hub 経由の分析器のみ90日固定。internal access findings の対象は S3 / DynamoDB / RDS</li>
+<li>IAM last accessed: 直近400日を追跡。認証情報レポートは IAM ユーザー専用</li>
+<li>IMDSv2: アカウント既定設定は 2024-03-25 から利用可でリージョン単位、既存インスタンスには影響しない。2024年中頃以降の新インスタンスタイプは IMDSv2 のみ。<code>ec2:MetadataHttpTokens</code> を IAM/SCP で使用可、<code>MetadataNoTokenRejected</code> で監視</li>
+<li>AWS STS: 2026-02 に GitHub / Google / CircleCI / OCI の provider 固有クレーム検証に対応。信頼ポリシーと RCP で使用可、identity-based policy と permission boundary では不可</li>
+<li><code>sts:SourceIdentity</code>: AssumeRole / AssumeRoleWithSAML / AssumeRoleWithWebIdentity で指定可、ロールチェーン後も保持</li>
+<li>ロールチェーンのセッションは最大1時間(EKS Pod Identity のクロスアカウントはロールチェーンを使う)</li>
+<li>RCP: 2024-11 に S3 / STS / KMS / SQS / Secrets Manager の5サービスで開始、上限は組織あたり2,000</li>
+<li>EKS Pod Identity: 2025-06 に <code>targetRoleArn</code> でクロスアカウント対応。IRSA は OIDC プロバイダー数と信頼ポリシーサイズが制約</li>
+<li>IAM Roles Anywhere: サービス自体は無料。信頼アンカーあたり CRL 2件上限(調整不可)、CDP / OCSP コールバック非対応</li>
+<li>AWS Private CA: 汎用 $400/月 + $0.75/証明書、short-lived mode $50/月 + $0.058/証明書(有効期間7日以内)</li>
+<li>Secrets Manager: managed rotation(RDS / Redshift / DocumentDB は Lambda 不要)、2025-11 の managed external secrets は Salesforce / BigID / Snowflake</li>
+<li><code>AWSCompromisedKeyQuarantineV3</code>: ユーザー・グループ・ロールに付与可能。AWS が露出を検知した際に適用しサポートケースを起票。制限ポリシーの付与でありキー無効化ではない</li>
+<li>VPC Lattice auth policy: <code>AWS_IAM</code> で SigV4 必須化。<code>vpc-lattice-svcs:SourceVpc</code> / <code>RequestMethod</code> / <code>RequestPath</code> 等の条件キー。呼び出し側の identity policy と両方の許可が必要</li>
+<li>Amazon Inspector code security: SAST / SCA / IaC(2025-06 GA)。CodeGuru Security は 2025-11-20 サポート終了、シークレット検出の後継として Amazon Q Developer のコードレビューが案内されている</li>
+<li>Bedrock AgentCore: 2025-10 GA。AgentCore Identity はワークロード ID / トークン金庫 / inbound・outbound OAuth</li>
+<li>OWASP Non-Human Identities Top 10 (2025): NHI1〜NHI10 の項目名を OWASP 公式ページで確認</li>
+</ul>
+
+<h3 class="unv">unverified: 一次情報で確認できなかった項目</h3>
+<ul>
+<li>OWASP Agentic Applications Top 10 (2026) の ASI 番号割り当て(公式サイトが自動取得を拒否、二次情報間で不一致)</li>
+<li>App Instance Property Lock の新規アプリ既定有効化(2026-06 ロールアウト)— メッセージセンター告知の二次情報</li>
+<li>Entra Agent ID の GA 時期(2026-04)、Agent 365 の価格、Workload ID Premium の価格(約 $3/ワークロード/月)</li>
+<li>RCP のサポート対象サービス数(2026-07 時点で20数サービス)— 正確な一覧は AWS Organizations ユーザーガイドで確認すること</li>
+<li>本文のコード例は構造の代表例。適用前に現行 API バージョンでの検証が必要</li>
+<li>GovCloud / 中国リージョン / Azure Government では機能提供範囲が異なる。本書は商用リージョン前提</li>
+</ul>
+
+<h3>主要参照先</h3>
+<div class="src">
+<p><strong>OWASP</strong> —
+<a href="https://owasp.org/www-project-non-human-identities-top-10/2025/top-10-2025/">Non-Human Identities Top 10 (2025)</a> ·
+<a href="https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/">Top 10 for Agentic Applications (2026)</a></p>
+
+<p><strong>AWS</strong> —
+<a href="https://aws.amazon.com/iam/access-analyzer/pricing">Access Analyzer 料金</a> ·
+<a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-create-unused.html">unused access アナライザー作成(追跡期間)</a> ·
+<a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed-view-data.html">last accessed 情報(400日)</a> ·
+<a href="https://aws.amazon.com/blogs/aws/amazon-ec2-instance-metadata-service-imdsv2-by-default/">IMDSv2 by default</a> ·
+<a href="https://aws.amazon.com/about-aws/whats-new/2024/03/set-imdsv2-default-new-instance-launches">IMDSv2 アカウント既定</a> ·
+<a href="https://aws.amazon.com/about-aws/whats-new/2026/01/aws-sts-supports-validation-identity-provider-claims">STS provider 固有クレーム検証</a> ·
+<a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html">sts:SourceIdentity</a> ·
+<a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_manage-assume.html">ロールチェーンの1時間制限</a> ·
+<a href="https://docs.aws.amazon.com/vpc-lattice/latest/ug/auth-policies.html">VPC Lattice auth policy</a> ·
+<a href="https://aws.amazon.com/about-aws/whats-new/2025/06/amazon-eks-pod-identity-cross-account-access">EKS Pod Identity クロスアカウント</a> ·
+<a href="https://docs.aws.amazon.com/rolesanywhere/latest/userguide/trust-model.html">Roles Anywhere 信頼モデル</a> ·
+<a href="https://aws.amazon.com/private-ca/pricing/">Private CA 料金</a> ·
+<a href="https://aws.amazon.com/blogs/security/aws-secrets-manager-launches-managed-external-secrets-for-third-party-credentials">managed external secrets</a> ·
+<a href="https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AWSCompromisedKeyQuarantineV3.html">AWSCompromisedKeyQuarantineV3</a> ·
+<a href="https://docs.aws.amazon.com/codeguru/latest/security-ug/end-of-support.html">CodeGuru Security サポート終了</a> ·
+<a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/identity.html">AgentCore Identity</a></p>
+
+<p><strong>Microsoft</strong> —
+<a href="https://techcommunity.microsoft.com/blog/microsoft-entra-blog/important-change-announcement-microsoft-entra-permissions-management-end-of-sale/4399382">Permissions Management 廃止告知</a> ·
+<a href="https://learn.microsoft.com/en-us/azure/defender-for-cloud/permissions-management">Defender for Cloud CIEM</a> ·
+<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/workload-identity">CA for workload identities</a> ·
+<a href="https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure">PIM</a> ·
+<a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/managed-identities-faq">マネージド ID FAQ(証明書更新)</a> ·
+<a href="https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-considerations">FIC の考慮事項</a> ·
+<a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/tutorial-enforce-secret-standards">application management policy</a> ·
+<a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent">ユーザー同意の構成</a> ·
+<a href="https://learn.microsoft.com/en-us/entra/id-protection/concept-workload-identity-risk">workload identity リスク</a> ·
+<a href="https://learn.microsoft.com/en-us/azure/key-vault/general/autorotation">Key Vault 自動ローテーション</a> ·
+<a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/reference-reports-data-retention">ログ保持</a> ·
+<a href="https://learn.microsoft.com/en-us/azure/storage/common/shared-key-authorization-prevent">Storage 共有キー禁止</a> ·
+<a href="https://learn.microsoft.com/en-us/entra/agent-id/what-is-microsoft-entra-agent-id">Entra Agent ID</a></p>
+</div>
+
+<footer>
+NHI(非人間アイデンティティ)— AWS / Azure ネイティブ機能 総棚卸し rev.2 / 2026-08<br>
+2026-08 時点の公開情報に基づく。仕様・価格・提供範囲は変更されるため、意思決定前に公式ドキュメントで再確認すること。<span class="unv">unverified</span> と記した項目は一次情報での裏取りができていない。
+</footer>
+
+</div>
+</body>
+</html>
